@@ -11,12 +11,14 @@ To run fourSynergy, you need R Version 4.5.1 or higher.
 fourSynergy is available at Bioconductor. The latest version can be installed via:
 
 ```
-if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager") BiocManager::install("fourSynergy")
+if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install("fourSynergy")
 ```
 The latest version available at github can be installed via:
 
 ```
-if (!requireNamespace("devtools", quietly=TRUE)) install.packages("devtools") devtools::install_github("sophiewind/fourSynergy")
+if (!requireNamespace("devtools", quietly=TRUE)) install.packages("devtools")
+devtools::install_github("sophiewind/fourSynergy")
 ```
 
 # Key features
