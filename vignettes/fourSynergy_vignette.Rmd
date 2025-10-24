@@ -1,0 +1,244 @@
+---
+title: "fourSynergy"
+output:
+  BiocStyle::html_document:
+    
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{fourSynergy_vignette}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    fig.width = 7, # Width of plots in inches
+    fig.height = 5 # Height of plots in inches
+)
+```
+
+# Introduction
+
+Circular Chromosome Conformation Capture Sequencing (4C-seq) is a
+sequencing technique enabling the identification of chromatin
+interactions. Currently, there are several tools available for 4C-seq
+analysis:
+
+-   `r BiocStyle::Biocpkg('r3Cseq')`
+-   fourSig (<https://doi.org/10.1093/nar/gku156>)
+-   FourCSeq (<https://doi.org/10.1093/bioinformatics/btv335>)
+    (deprecated)
+-   peakC (<https://doi.org/10.1093/nar/gky443>)
+-   R.4Cker (<https://doi.org/10.1371/journal.pcbi.1004780>)
+
+*fourSynergy* is an ensemble algorithm that leverages synergies between
+the base tools *r3cseq*, *fourSig*, *peakC*, and *R.4cker*. To this end,
+all of these tools need to be run, which can be achieved using the
+*fourSynergy* pipeline. This pipeline, written in *snakemake*, includes
+quality control, interaction calling, and post-processing steps to
+prepare the output of the base tools for the ensemble algorithm.
+
+# Requirements
+
+**If you want to quickly start with testing the package you can jump to
+the section [R analysis](#R-analysis) and run the *fourSynergy* R
+package on testdata.**
+
+## Pipeline
+
+-   snakemake installation
+
+We recommend the pipeline to be executed in a docker.
+
+# Running fourSynergy
+
+## Installation
+
+*fourSynergy* can be installed as follows:
+
+```{r, eval=FALSE}
+BiocManager::install("fourSynergy")
+```
+
+## Requirements
+
+To run *fourSynergy*, you need R (Version 4.5 or higher).
+
+## Getting started
+
+A basic workflow of 4C-seq data is demonstrated in the following on an
+exemplary dataset. First, we need to run the fourSynergy pipeline.
+
+**If you want to quickly start with testing the package you can jump to
+the section [R analysis](#R-analysis) and run the *fourSynergy* R
+package on testdata.**
+
+## fourSynergy Pipeline
+
+Before starting the R analysis you have to run the fourSynergy snakemake
+pipeline, which is available at (will be added soon) and can be executed
+using:
+
+```{bash, eval=FALSE}
+snakemake \
+    -s Snakefile_dyn \
+    --cores 30 \
+    --configfile./Datasets/Demo/info.yaml \
+    --use-conda
+```
+
+### Input
+
+Input for the fourSynergy pipeline are...
+
+-   4C-seq FASTQ files
+
+-   config.yaml
+
+#### config
+
+The config file is crucial to run *fourSynergy*. All relevant
+experimental information is stored here. You can find an exemplary
+info.yaml in `inst/extdata/Datasets/Demo/info.yaml`.
+
+### Output
+
+The pipeline creates an results directory in the directory were its
+executed. In the results directory is a directory called like the
+`author` provided in the config file. In this directory all results of
+the base tools and *fourSynergy* is written.
+
+```         
+├── Datasets
+├── ...
+└── results
+    └── author
+        ├── alignment   -> alignment results
+        ├── basic4Cseq  -> Basic4Cseq results
+        ├── foursig     -> fourSig results
+        ├── peakC       -> peakC results
+        ├── qc          -> FASTQC results
+        ├── r3cseq      -> r3Cseq results
+        ├── r4cker      -> R.4Cker results
+        └── sia         -> standardized tools results
+```
+
+# R analysis {#r-analysis}
+
+After the pipeline is executed we can start with the analysis in R by
+loading the *fourSynergy* R package.
+
+```{r, echo=FALSE}
+library(fourSynergy)
+# library(tibble)
+```
+
+## Load data
+
+Than the pipeline results can be loaded into an *fourSynergy* object. In
+the provided example, `config` and the pathes are stored in extdata.
+However, in a real-world scenario, `res_path` would typically be located
+in `./results/[DatasetName]` and the `tracks` in
+`./results/[DatasetName]/alignment`.
+
+```{r, eval=TRUE}
+# Load config
+config <- system.file("extdata", "Datasets", "Demo", "info.yaml",
+    package = "fourSynergy"
+)
+
+# Load results path
+res_path <- system.file("extdata", "results", "Demo",
+    package = "fourSynergy"
+)
+
+# Load path of .bedGraphs
+tracks <- system.file("extdata", "results", "Demo", "alignment",
+    package = "fourSynergy"
+)
+sia <- createIa(
+    res_path = res_path,
+    config = config,
+    tracks = tracks
+)
+```
+
+The *fourSynergy* object stores information about the single tool calls
+in condition and in control as well as metadata.
+
+| Slot             | Data                           |
+|------------------|--------------------------------|
+| metadata         | Metadata from config           |
+| expInteractions  | Base tool results - experiment |
+| ctrlInteractions | Base tool results - control    |
+| expConsensus     | Ensemble results - experiment  |
+| ctrlConsensus    | Ensemble results - control     |
+| vp               | Viewpoint position             |
+| vfl              | Virtual fragment library (VFL) |
+| tracks           | Path of .bedGraphs             |
+| differential     | Differential ensemble results  |
+
+## Base tool results
+
+The base tool results are stored in the fourSynergy object in the slots
+`expInteractions` and `ctrlInteractions`.
+
+```{r, eval=TRUE}
+slotNames(sia)
+```
+
+They can be visualized using `plotIaIndiviualTools()`. There is also the
+object to pass genes of interest, which are than shown in the karyoplot.
+
+```{r, eval=TRUE}
+plotIaIndiviualTools(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
+```
+
+## Ensemble results
+
+To perform ensemble calling you need to specify if you want to use the
+F1 or the AUPRC model.
+
+```{r}
+sia <- consensusIa(sia, model = "AUPRC")
+```
+
+The ensemble results can than be visualized.
+
+```{r}
+plotConsensusIa(ia = sia)
+```
+
+## Differential interaction analysis
+
+*fourSynergy* provides differential interaction analysis to compare
+interactions across conditions. The differential interaction analysis is
+based on DESeq2 using count data to model the variability in the data
+using a negative binomial distribution. In the example dataset the
+`fitType` was set to 'mean', by default this value is 'local'.
+
+*(The plots do not look representative here because the BAM file size
+has been drastically reduced for this example.)*
+
+```{r}
+sia <- differentialAnalysis(ia = sia, fitType = "mean")
+```
+
+The results of the differential analysis are stored in the
+`@differential` slot of the `sia` object and can be visualized using
+`plotDiffIa()`.
+
+```{r diffplot}
+plotDiffIa(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
+```
+
+
+```{r}
+sessionInfo()
+```

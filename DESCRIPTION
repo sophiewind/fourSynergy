@@ -1,0 +1,47 @@
+Package: fourSynergy
+Type: Package
+Title: Ensemble algorithm for 4C-seq data
+Version: 0.99.0
+Authors@R: 
+	c(person("Sophie", "Wind", , 
+	 email = "sophie.wind@uni-muenster.de", 
+	 role = c("aut", "cre"),
+	 comment=c(ORCID="0009-0002-1174-8201")),
+	 person("Carolin", "Walter", , 
+	 email = "carolin.walter@uni-muenster.de", 
+	 role = c("aut", "fnd"),
+	 comment=c(ORCID="0000-0002-5155-7728")))
+Description: fourSynergy is an ensemble algorithm leveraging synergies among the existing 4C-seq algorithms r3C-seq, peakC, r.4cker and fourSig. It uses a weighted voting approach to perform improved interaction calling. fourSynergy supports also differential interaction calling.
+License: LGPL-3
+Encoding: UTF-8
+Depends: R (>= 4.5.0), GenomicRanges
+Imports:
+    magrittr,
+    dplyr,
+    ggplot2,
+    tibble,
+    org.Hs.eg.db,
+    org.Mm.eg.db,
+    reshape2,
+    txdbmaker,
+    tidyr,
+    methods,
+    jsonlite,
+    karyoploteR,
+    TxDb.Mmusculus.UCSC.mm10.knownGene,
+    bamsignals,
+    DESeq2,
+    GenomeInfoDb,
+    graphics
+VignetteBuilder: knitr
+Suggests: 
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    yaml
+biocViews: Sequencing, Software, DifferentialPeakCalling
+BugReports: https://github.com/sophiewind/TODO/issues
+URL: https://github.com/sophiewind/TODO
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

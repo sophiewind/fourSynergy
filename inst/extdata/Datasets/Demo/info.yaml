@@ -1,0 +1,24 @@
+author: Demo
+inputDir: /media/demo/projects/swind/project4c_Loeschfrist2033-12-01/Datasets/Demo
+organism: mm10
+ref: /media/demo/Genomes/Mus_musculus.GRCm38.p6/bwa.0.7.17/GRCm38.p6.genome.fa
+VPchr: 18
+VPpos: 68058402
+condition: TGFb
+conditionRep:
+  - 1
+  - 2
+control: shc
+controlRep:
+  - 1
+  - 2
+readLength: 74
+PrimerF: TGTGCTCTTGTACCACGTGCATGG
+PrimerR: gattggaaaggatcttgaattt
+REEnz:
+  - NlaIII
+  - DpnII
+RESeq:
+  - CATG
+  - GATC
+GSE: GSE197013
