@@ -88,7 +88,7 @@ differentialAnalysis <- function(ia, fitType = "local") {
         rownames(samples) <- as.character(cons)
         colnames(samples) <- gsub("_sorted.bam", "", basename(bams))
 
-        try(heatmap(as.matrix(samples)))
+        #try(heatmap(as.matrix(samples)))
 
         ## Run DESeq2
         dds <- DESeqDataSetFromMatrix(
@@ -115,8 +115,8 @@ differentialAnalysis <- function(ia, fitType = "local") {
         norm_counts <- counts(dds, normalized = TRUE)
         norm_counts_log <- log(norm_counts + 1, 10)
 
-        plotMA(res, ylim = c(-2, 2))
-        plotCounts(dds, gene = which.min(res$padj), intgroup = "condition")
+        # plotMA(res, ylim = c(-2, 2))
+        # plotCounts(dds, gene = which.min(res$padj), intgroup = "condition")
 
         ia <- setDifferential(ia, res)
         return(ia)
