@@ -10,7 +10,9 @@ plotConsensusIa(
   cex.chr = 1,
   cex.ideo = 0.6,
   cex.y.track = 0.6,
-  cex.vp = 1
+  cex.vp = 1,
+  highlight_regions = NULL,
+  plot_spider = FALSE
 )
 }
 \arguments{
@@ -26,6 +28,10 @@ plotConsensusIa(
 \item{cex.y.track}{character expansion y axis track.}
 
 \item{cex.vp}{character expansion viewpoint label.}
+
+\item{highlight_regions}{regions to highlight in the plot}
+
+\item{plot_spider}{plotting connections from VP to interactions}
 }
 \value{
 karyoplot with calling results.

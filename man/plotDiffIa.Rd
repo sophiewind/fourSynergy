@@ -10,7 +10,9 @@ plotDiffIa(
   cex.chr = 1,
   cex.ideo = 0.6,
   cex.y.track = 0.6,
-  cex.vp = 1
+  cex.vp = 1,
+  plot_spider = FALSE,
+  highlight_regions = NULL
 )
 }
 \arguments{
@@ -26,6 +28,10 @@ plotDiffIa(
 \item{cex.y.track}{character expansion y axis track.}
 
 \item{cex.vp}{character expansion viewpoint label.}
+
+\item{plot_spider}{plotting connections from VP to interactions}
+
+\item{highlight_regions}{regions to highlight in the plot}
 }
 \value{
 DESeq2 results of differential interaction calling.

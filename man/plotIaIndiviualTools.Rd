@@ -2,7 +2,8 @@
 % Please edit documentation in R/plotIaIndividualTools.R
 \name{plotIaIndiviualTools}
 \alias{plotIaIndiviualTools}
-\title{plotIaIndiviualTools}
+\title{This function creates a karyoplot with the interactions calls of the
+individual tools.}
 \usage{
 plotIaIndiviualTools(
   ia = GRangesList(),
@@ -11,7 +12,8 @@ plotIaIndiviualTools(
   cex.ideo = 0.6,
   cex.y.track = 0.6,
   cex.y.lab = 0.6,
-  cex.vp = 1
+  cex.vp = 1,
+  highlight_regions = NULL
 )
 }
 \arguments{
@@ -29,6 +31,8 @@ plotIaIndiviualTools(
 \item{cex.y.lab}{character expansion y lab.}
 
 \item{cex.vp}{character expansion viewpoint label.}
+
+\item{highlight_regions}{regions to highlight in the plot}
 }
 \value{
 karyoplot with calling results.

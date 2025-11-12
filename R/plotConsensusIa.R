@@ -31,14 +31,13 @@
 #' @export
 plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
                             cex.chr = 1, cex.ideo = 0.6, cex.y.track = 0.6,
-                            cex.vp = 1, highlight_regions = NULL, 
+                            cex.vp = 1, highlight_regions = NULL,
                             plot_spider = FALSE) {
     TxDb <- switch(ia@metadata$organism,
         "mm9" = TxDb.Mmusculus.UCSC.mm9.knownGene,
         "mm10" = TxDb.Mmusculus.UCSC.mm10.knownGene,
         "hg19" = TxDb.Hsapiens.UCSC.hg19.knownGene,
-        "hg38" = TxDb.Hsapiens.UCSC.hg38.knownGene
-    )
+        "hg38" = TxDb.Hsapiens.UCSC.hg38.knownGene)
 
     if (is.null(genes_of_interest)) {
         kp <- createKaryoplot(ia, cex = cex.chr)
@@ -48,30 +47,20 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
 
     # Regions
     if (!is.null(highlight_regions)){
-      for (i in seq(1, length(highlight_regions))){
-        kpBars(kp,
-               chr = paste0("chr", ia@metadata$VPchr), 
-               x0 = start(highlight_regions[[i]]),
-               x1 = end(highlight_regions[[i]]),
-               y0 = 0, y1 = 1,
-               r0 = 0.5, r1 = 1, col = adjustcolor("grey", alpha.f = 0.4),
-               border = NA
-        )
-      }
+        plotRegions(ia, kp, highlight_regions)
     }
-    
+
     # Tracks
     bgs <- readBedGraph(ia)
     plotTracks(ia, kp, bgs,
                r0 = 0.5, r1 = 1, cex.vp = cex.vp,
-               cex.y.track = cex.y.track
-    )
-    
-    
+               cex.y.track = cex.y.track)
+
+
     if(plot_spider == TRUE){
       r_height <- c(0.4, 0.225, 0.175)
       kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[2])
-      
+
       start.reg <- GRanges(
         seqnames = seqnames(ia@vp),
         ranges = start(ia@vp)
@@ -88,7 +77,7 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
     # Structure plot
     kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[1])
     kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[3])
-    
+
     # Interactions
     if (length(ia@expConsensus) == 0) {
       warning(
@@ -105,7 +94,7 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
                   labels = "condition", r0 = r_height[2], r1 = r_height[1],
                   cex = 0.7, data.panel = 1)
     }
-    
+
     if (length(ia@ctrlConsensus) == 0) {
       warning(
         "fourSynergy found no interactions in control. Did you run",
@@ -122,19 +111,19 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
                   labels = "control", r0 = 0, r1 = r_height[3],
                   cex = 0.7, data.panel = 1)
     }
-    
+
     # Genes
     if (!is.null(genes_of_interest)) {
       plot_genes(ia, kp, genes_of_interest, TxDb)
     }
-    
+
     # VP
     kpAbline(kp, v = start(ia@vp), col = "black", lty = 2, data.panel = 1)
     kpAddBaseNumbers(kp,
                      tick.dist = 100000, tick.len = 10, cex = cex.ideo,
                      minor.tick.col = "gray"
     )
-    
+
     legend(0.85, 0.8,
            legend = c("condition", "control"),
            fill = c("firebrick4", "darkblue"), border = NA,

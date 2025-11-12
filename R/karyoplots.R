@@ -14,7 +14,7 @@ createKaryoplot <- function(ia, type = 1, cex = 1, cex.axis = 1,
                             cex.lab = 1, cex.main = 1) {
   # Adjust plot settings
   pp <- getDefaultPlotParams(plot.type = type)
-  
+
   pp$ideogramheight <- 5
   pp$data1inmargin <- 5
   pp$data2inmargin <- 5
@@ -23,7 +23,7 @@ createKaryoplot <- function(ia, type = 1, cex = 1, cex.axis = 1,
   pp$data1height <- 200
   pp$data2height <- 100
   pp$leftmargin <- 0.15
-  
+
   # Display the plot
   plotKaryotype(
     genome = ia@metadata$organism,
@@ -61,7 +61,7 @@ readBedGraph <- function(ia) {
         makeGRangesFromDataFrame(keep.extra.columns = TRUE)
       bgs[[paste0(ia@metadata$condition, "_", i)]] <- cond
     }
-    
+
     for (i in ia@metadata$controlRep) {
       ctrl <- read.delim(
         paste0(
@@ -113,7 +113,7 @@ plotTracks <- function(ia, kp, bgs, r0 = 0, r1 = 1, cex.vp = 1,
          y = (r1 - 0.05), labels = "VP", data.panel = 1, cex = cex.vp,
          srt = 0, pos = 2, offset = 0.2
   )
-  
+
   # Axis
   max_reads_per_replica <- vapply(
     bgs, function(gr) max(gr$reads, na.rm = TRUE),
@@ -148,17 +148,17 @@ plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2") {
                  "hg19" = TxDb.Hsapiens.UCSC.hg19.knownGene,
                  "hg38" = TxDb.Hsapiens.UCSC.hg38.knownGene
   )
-  
+
   genes.data <- makeGenesDataFromTxDb(TxDb, karyoplot = kp)
   genes.data <- addGeneNames(genes.data)
   genes.data <- mergeTranscripts(genes.data)
   sg <- genes.data$genes[mcols(genes.data$genes)$name %in%
                            genes_of_interest]
-  
+
   if (length(sg) == 0 && genes_of_interest != "all") {
     warning("Genes of interest not found in the nearbait area.")
   }
-  
+
   plotg <- function(data) {
     plot_params <- list(
       karyoplot = kp,
@@ -170,7 +170,7 @@ plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2") {
     )
     do.call(kpPlotGenes, plot_params)
   }
-  
+
   if (length(genes_of_interest) == 1 && genes_of_interest == "all") {
     plotg(genes.data)
   } else {
@@ -203,8 +203,55 @@ plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2") {
       gene_data <- addGeneNames(gene_data)
       gene_data <- mergeTranscripts(gene_data)
       dev.off()
-      
+
       plotg(gene_data)
     }
   }
 }
+
+#' Internal function to highlight regions in karyoplot.
+#'
+#' @param ia fourSynergy object with interactions from all base tools
+#' (peakC, r3c-seq, fourSig, r4cker) and other relevant information.
+#' @param kp karyoplot.
+#' @param highlight_regions regions to highlight in the plot.
+#'
+#' @return karyoplot base
+#' @keywords internal
+plotRegions <- function(ia, kp, highlight_regions){
+    if (str_detect(highlight_regions,
+                   "chr[1-9XYM]+\\:\\d+\\-\\d+(,\\s*chr[1-9XYM]+:\\d+-\\d+)*")){
+        reg <- highlight_regions %>%
+            stringr::str_split_1(', ') %>%
+            as.data.frame() %>%
+            separate('.', into = c("seqnames", "start", "end")) %>%
+            makeGRangesListFromDataFrame()
+    } else if (endsWith(highlight_regions, '.bed')){
+        b.f <- read.delim(highlight_regions, header = FALSE)
+        if (b.f[1,2] == "start"){
+            b.f <- read.delim(highlight_regions, header = TRUE)
+        }
+        b.f <- b.f [,1:3]
+        colnames(b.f) <- c('seqnames', 'start', 'end')
+        reg <- b.f %>%
+            makeGRangesListFromDataFrame()
+    } else {
+        stop("The regions have to be either provided as string with following ",
+             "pattern: 'chr3:33000000-34000000' or as comma separated string ",
+             "(chr3:33000000-34000000, chr3:35000000-35500000) or as valid ",
+             ".bed file.")
+    }
+
+    for (i in seq(1, length(reg))){
+        kpBars(kp,
+               chr = paste0("chr", ia@metadata$VPchr),
+               x0 = start(reg[[i]]),
+               x1 = end(reg[[i]]),
+               y0 = 0, y1 = 1,
+               r0 = 0.5, r1 = 1, col = adjustcolor("grey", alpha.f = 0.4),
+               border = NA
+        )
+    }
+}
+
+
