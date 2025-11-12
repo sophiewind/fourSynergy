@@ -358,6 +358,8 @@ server <- function(input, output, session) {
     destfile_paths <- reactiveVal()
     output$sia_info <- renderText({
         req(input$sia)
+        req(input$tracks)
+
         sia <- input$sia
         sia <- sia %>% mutate(dir = paste0(dirname(datapath), '/', name))
 
@@ -445,11 +447,10 @@ server <- function(input, output, session) {
 
   # Metadata ----
   output$meta_org <- renderValueBox({
-      sia_val <- sia()
     valueBox(
-      value = sia_val@metadata$organism,
+      value = sia()@metadata$organism,
       subtitle = "organism",
-      icon = if (grepl("^mm", sia_val@metadata$organism)) {
+      icon = if (grepl("^mm", sia()@metadata$organism)) {
         icon("mouse")
       } else {
         icon("person")
@@ -458,52 +459,39 @@ server <- function(input, output, session) {
     )
   })
   output$meta_re <- renderText({
-      sia_val <- sia()
-      paste(class(sia))
-      paste(class(sia()))
-      paste(class(sia_val))
-    #paste(sia_val$metadata$REEnz, collapse = ", ")
+    paste(sia()@metadata$REEnz, collapse = ", ")
   })
 
   output$meta_vp <- renderText({
-      sia_val <- sia()
-    paste0("chr:", sia_val@metadata$VPchr, "\n", start(sia@vp))
+    paste0("chr:", sia()@metadata$VPchr, "\n", start(sia()@vp))
   })
   output$meta_rl <- renderText({
-      sia_val <- sia()
-      sia_val@metadata$readLength
+      sia()@metadata$readLength
   })
   output$meta_cond_1 <- renderText({
-      sia_val <- sia()
-      sia_val@metadata$condition
+      sia()@metadata$condition
   })
 
   output$meta_cond_2 <- renderText({
-      sia_val <- sia()
-      sia_val@metadata$condition
+      sia()@metadata$condition
   })
 
   output$meta_rep_co <- renderText({
-    sia_val <- sia()
-    max(sia_val@metadata$conditionRep)
+    max(sia()@metadata$conditionRep)
   })
 
   output$meta_orga <- renderText({
-     sia_val <- sia()
-     sia_val@metadata$organism
+     sia()@metadata$organism
   })
   output$meta_ctrl_1 <- renderText({
-    sia_val <- sia()
-    sia_val@metadata$control
+    sia()@metadata$control
   })
 
   output$meta_ctrl_2 <- renderText({
-      sia_val <- sia()
-      sia_val@metadata$control
+      sia()@metadata$control
   })
   output$meta_rep_ct <- renderText({
-      sia_val <- sia()
-    max(sia_val@metadata$controlRep)
+    max(sia()@metadata$controlRep)
   })
 
 
@@ -517,8 +505,8 @@ server <- function(input, output, session) {
   })
 
   output$metadata <- renderDataTable({
-    file.out <- paste0('fourSyerngy_metadata_', sia@metadata$author)
-    sia@metadata %>%
+    file.out <- paste0('fourSyerngy_metadata_', sia()@metadata$author)
+    sia()@metadata %>%
       unlist() %>%
       as.matrix(ncol = 2) %>%
       as.data.frame() %>%
@@ -534,7 +522,7 @@ server <- function(input, output, session) {
 
   # Seq ----
   output$fastqc_tab <- renderDataTable({
-      file.out <- paste0('fourSyerngy_fastqc_', sia@metadata$author)
+      file.out <- paste0('fourSyerngy_fastqc_', sia()@metadata$author)
 
     # Quality table
     read.delim("/host/results/Geeven_sox/multiqc_data/multiqc_fastqc.txt") %>%
@@ -581,7 +569,7 @@ server <- function(input, output, session) {
 
 
   output$align_tab <- renderDataTable({
-      file.out <- paste0('fourSyerngy_flagstat_', sia@metadata$author)
+      file.out <- paste0('fourSyerngy_flagstat_', sia()@metadata$author)
 
     read.delim('/host/results/Geeven_sox/multiqc_data_1/samtools-flagstat-pct-table.txt') %>%
       datatable(colnames = paste0(gsub('\\.', ' ', colnames(.)), " (%)"),
@@ -643,10 +631,8 @@ server <- function(input, output, session) {
 
   # BAsic karyoplot
   output$karyo_base <- renderPlot({
-      sia_val <- sia()
-
     plotIaIndiviualTools(
-        sia_val, cex.chr = 2, cex.ideo = 1,
+        sia(), cex.chr = 2, cex.ideo = 1,
       cex.y.track = 1, cex.y.lab = 1, cex.vp = 1.5)
   })
 
