@@ -11,7 +11,7 @@ setGeneric("setDifferential", function(object, value) {
 
 #' Set differential attribute
 #'
-#' @param object fourSynergy object with interactions from all base tools
+#' @param object fourSynergy object with interactions from all base tools.
 #' @param value DESeqResults-object
 #'
 #' @return Modified fourSynergy-object
@@ -23,6 +23,30 @@ setMethod(
             object@differential <- value
         } else {
             stop("Value muss ein DESeqResults-Objekt sein")
+        }
+        return(object)
+    }
+)
+
+#' Set dds attribute
+#'
+#' @param object fourSynergy object with interactions from all base tools.
+#' @param value DESeqDataSet-object.
+#'
+#' @return Modified fourSynergy-object
+#' @export
+setGeneric("setDds", function(object, value) {
+    standardGeneric("setDds")
+})
+
+#' @rdname setDds
+setMethod(
+    "setDds", signature(object = "fourSynergy"),
+    function(object, value) {
+        if (inherits(value, "DESeqDataSet")) {
+            object@dds <- value
+        } else {
+            stop("Value must be DESeqDataSet object.")
         }
         return(object)
     }

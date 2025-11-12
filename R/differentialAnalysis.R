@@ -119,6 +119,8 @@ differentialAnalysis <- function(ia, fitType = "local") {
         # plotCounts(dds, gene = which.min(res$padj), intgroup = "condition")
 
         ia <- setDifferential(ia, res)
+        ia <- setDds(ia, dds)
+
         return(ia)
     }
 }

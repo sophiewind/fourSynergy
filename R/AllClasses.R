@@ -8,7 +8,8 @@
 #' @slot vp Viewpoint position.
 #' @slot vfl Virtual fragment library.
 #' @slot tracks Path to the alignment files.
-#' @slot differential Results of differential interaction calling.
+#' @slot differential Results of differential interaction calling (res).
+#' @slot dds Results of differential interaction calling (dds).
 #'
 #' @rdname ia4C-class
 #' @export
@@ -23,7 +24,8 @@ setClass(
         vp = "GRanges",
         vfl = "GRanges",
         tracks = "character",
-        differential = "ANY"
+        differential = "ANY",
+        dds = "ANY"
     ),
     prototype = prototype(
         metadata = list(),
@@ -34,7 +36,8 @@ setClass(
         vp = GRanges(),
         vfl = GRanges(),
         tracks = character(0),
-        differential = NULL
+        differential = NULL,
+        dds = NULL
     ),
     validity = function(object) {
         # Check if all slots are of correct class
