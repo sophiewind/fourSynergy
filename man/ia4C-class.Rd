@@ -26,6 +26,8 @@ S4 class storing data collected from 4C-seq analyses.
 
 \item{\code{tracks}}{Path to the alignment files.}
 
-\item{\code{differential}}{Results of differential interaction calling.}
+\item{\code{differential}}{Results of differential interaction calling (res).}
+
+\item{\code{dds}}{Results of differential interaction calling (dds).}
 }}
 
