@@ -74,7 +74,9 @@ border-top-color:#666666;
                 column(12,
                        fileInput("config", "Upload config:", accept = ".yaml"),
                        fileInput("zip", "Zip and upload results/ directory:", multiple = TRUE),
-                       fileInput("sia", "Upload results/sia directory:", multiple = TRUE)),
+                       fileInput("sia", "Upload results/sia directory:", multiple = TRUE),
+                       textOutput("sia_info")  # neues Output-Feld für Debugging-Informationen
+                )
               )
       ),
 
@@ -352,6 +354,39 @@ border-top-color:#666666;
 server <- function(input, output, session) {
     options(shiny.maxRequestSize = 500 * 1024^2)
 
+    # Upload logic ####
+    destfile_paths <- reactiveVal()
+    output$sia_info <- renderText({
+        req(input$sia)
+        sia <- input$sia
+        sia <- sia %>% mutate(dir = paste0(dirname(datapath), '/', name))
+
+        print(paste("Typ von'sia':", class(sia)))
+        print(paste("Name der hochgeladenen Datei:", sia$name))
+
+        uploads_dir <- file.path(getwd(), "results/Geeven_sox/sia")  # TODO add author to dirname
+        dir.create(uploads_dir, recursive = T)
+        print(paste("Verzeichnis für hochgeladene Dateien:", uploads_dir))
+
+        destfile <- file.path(uploads_dir, sia$name)
+
+        # eleganter
+        destfile_paths(paste0(getwd(), "/results/Geeven_sox//"))
+
+        for (i in seq_along(sia$name)) {
+            print(sia$datapath[i])
+            if (endsWith(sia$name[i], 'nearbait_area.bed')){
+                file.copy(sia$datapath[i], gsub(pattern = 'sia', '', destfile[i]), overwrite = TRUE)
+                print(gsub(pattern = 'sia', '', destfile[i]))
+            } else {
+                file.copy(sia$datapath[i], destfile[i], overwrite = TRUE)
+            }
+        }
+        message(file.exists( sia$datapath[i]))
+        message(file.exists( destfile[i]))
+        message(destfile_paths())
+    })
+
     # Input regions control
     iv <- InputValidator$new()
 
@@ -402,18 +437,19 @@ server <- function(input, output, session) {
 
 
   # Create sia ----
-  # sia <- createIa('/host/results/Geeven_sox/',
-  #                 '/host/Datasets/Geeven_sox/info.yaml',
-  #                 '/host/results/Geeven_sox/alignment/')
+  sia <- reactive({createIa(destfile_paths(),
+                  '/host/Datasets/Geeven_sox/info.yaml',
+                  '/host/results/Geeven_sox/alignment/')})
   # sia <- consensusIa(sia, model = 'AUPRC')
   # sia <- differentialAnalysis(sia)
 
   # Metadata ----
   output$meta_org <- renderValueBox({
+      sia_val <- sia()
     valueBox(
-      value = sia@metadata$organism,
+      value = sia_val@metadata$organism,
       subtitle = "organism",
-      icon = if (grepl("^mm", sia@metadata$organism)) {
+      icon = if (grepl("^mm", sia_val@metadata$organism)) {
         icon("mouse")
       } else {
         icon("person")
@@ -422,39 +458,52 @@ server <- function(input, output, session) {
     )
   })
   output$meta_re <- renderText({
-    paste(sia@metadata$REEnz, collapse = ", ")
+      sia_val <- sia()
+      paste(class(sia))
+      paste(class(sia()))
+      paste(class(sia_val))
+    #paste(sia_val$metadata$REEnz, collapse = ", ")
   })
 
   output$meta_vp <- renderText({
-    paste0("chr:", sia@metadata$VPchr, "\n", start(sia@vp))
+      sia_val <- sia()
+    paste0("chr:", sia_val@metadata$VPchr, "\n", start(sia@vp))
   })
   output$meta_rl <- renderText({
-    sia@metadata$readLength
+      sia_val <- sia()
+      sia_val@metadata$readLength
   })
   output$meta_cond_1 <- renderText({
-    sia@metadata$condition
+      sia_val <- sia()
+      sia_val@metadata$condition
   })
 
   output$meta_cond_2 <- renderText({
-      sia@metadata$condition
+      sia_val <- sia()
+      sia_val@metadata$condition
   })
 
   output$meta_rep_co <- renderText({
-    max(sia@metadata$conditionRep)
+    sia_val <- sia()
+    max(sia_val@metadata$conditionRep)
   })
 
   output$meta_orga <- renderText({
-    sia@metadata$organism
+     sia_val <- sia()
+     sia_val@metadata$organism
   })
   output$meta_ctrl_1 <- renderText({
-    sia@metadata$control
+    sia_val <- sia()
+    sia_val@metadata$control
   })
 
   output$meta_ctrl_2 <- renderText({
-      sia@metadata$control
+      sia_val <- sia()
+      sia_val@metadata$control
   })
   output$meta_rep_ct <- renderText({
-    max(sia@metadata$controlRep)
+      sia_val <- sia()
+    max(sia_val@metadata$controlRep)
   })
 
 
@@ -548,7 +597,8 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$basic_tab <- renderDataTable({
-      file.out <- paste0('fourSyerngy_basic4cseq_', sia@metadata$author)
+      sia_val <- sia()
+      file.out <- paste0('fourSyerngy_basic4cseq_', sia_val@metadata$author)
 
     files <- list.files("/host/results/Geeven_sox/basic4cseq/stats/",
                         pattern = "*.txt", full.names = TRUE)
@@ -593,13 +643,14 @@ server <- function(input, output, session) {
 
   # BAsic karyoplot
   output$karyo_base <- renderPlot({
+      sia_val <- sia()
+
     plotIaIndiviualTools(
-      sia, cex.chr = 2, cex.ideo = 1,
+        sia_val, cex.chr = 2, cex.ideo = 1,
       cex.y.track = 1, cex.y.lab = 1, cex.vp = 1.5)
   })
 
   observeEvent(input$button_genes_base, {
-
     if (is.null(input$genes_select_base)) {
       # Behandlung wenn keine Gene ausgewählt sind
       genes <- NULL
@@ -609,17 +660,20 @@ server <- function(input, output, session) {
     }
 
     if (input$in_regions == "chr:start-end") {
+        sia_val <- sia()
+
       output$karyo_base <- renderPlot({
         plotIaIndiviualTools(
-          sia, cex.chr = 2, cex.ideo = 1,
+          sia_val, cex.chr = 2, cex.ideo = 1,
           cex.y.track = 1, cex.y.lab = 1, cex.vp = 1.5,
           genes_of_interest = genes
         )
       })
     } else {
       output$karyo_base <- renderPlot({
+          sia_val <- sia()
         plotIaIndiviualTools(
-          sia, cex.chr = 2, cex.ideo = 1,
+          sia_val, cex.chr = 2, cex.ideo = 1,
           cex.y.track = 1, cex.y.lab = 1, cex.vp = 1.5,
           genes_of_interest = genes,
           highlight_regions = input$in_regions
@@ -644,7 +698,8 @@ server <- function(input, output, session) {
 
 
   output$plot_bt <- renderPlot({
-    p <- trackPlots(sia)
+      sia_val <- sia()
+    p <- trackPlots(sia_val)
     plot_grid(p[[1]] +
                 theme(axis.text.x = element_blank(),
                       axis.ticks.x = element_blank(),
@@ -655,9 +710,10 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$button_genes_base, {
+      sia_val <- sia()
       if (input$in_regions == "chr:start-end") {
           output$plot_bt <- renderPlot({
-          p <- trackPlots(sia)
+          p <- trackPlots(sia_val)
           plot_grid(p[[1]] +
                         theme(axis.text.x = element_blank(),
                               axis.ticks.x = element_blank(),
@@ -673,7 +729,8 @@ server <- function(input, output, session) {
           separate('.', into = c("seqnames", "start", "end")) %>%
           makeGRangesListFromDataFrame()
       output$plot_bt <- renderPlot({
-      p <- trackPlots(sia, reg)
+          sia_val <- sia()
+      p <- trackPlots(sia_val, reg)
       plot_grid(p[[1]] +
                   theme(axis.text.x = element_blank(),
                         axis.ticks.x = element_blank(),
@@ -690,14 +747,15 @@ server <- function(input, output, session) {
 
   # Condition
   output$tab_base_cond <- renderDataTable({
+      sia_val <- sia()
     file.out <- paste0('fourSyerngy_base_algorithm_condition_',
-                       sia@metadata$author)
+                       sia_val@metadata$author)
 
-    vfl <- sia@vfl
-    for (i in seq(1, length(sia@expInteractions))){
-      ov <- findOverlaps(vfl, sia@expInteractions[[i]])
-      mcols(vfl)[[sia@expInteractions[[i]]$tool[1]]] <- '-'
-      mcols(vfl[queryHits(ov),])[sia@expInteractions[[i]]$tool[1]] <- 'X'
+    vfl <- sia_val@vfl
+    for (i in seq(1, length(sia_val@expInteractions))){
+      ov <- findOverlaps(vfl, sia_val@expInteractions[[i]])
+      mcols(vfl)[[sia_val@expInteractions[[i]]$tool[1]]] <- '-'
+      mcols(vfl[queryHits(ov),])[sia_val@expInteractions[[i]]$tool[1]] <- 'X'
     }
 
     vfl.df <- vfl %>% as.data.frame(keep.extra.columns = TRUE)# %>%
@@ -723,13 +781,14 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$tab_base_ctrl <- renderDataTable({
-    file.out <- paste0('fourSyerngy_base_algorithm_control_', sia@metadata$author)
+      sia_val <- sia()
+    file.out <- paste0('fourSyerngy_base_algorithm_control_', sia_val@metadata$author)
 
-    vfl <- sia@vfl
-    for (i in seq(1, length(sia@ctrlInteractions))){
-      ov <- findOverlaps(vfl, sia@ctrlInteractions[[i]])
-      mcols(vfl)[[sia@ctrlInteractions[[i]]$tool[1]]] <- '-'
-      mcols(vfl[queryHits(ov),])[sia@ctrlInteractions[[i]]$tool[1]] <- 'X'
+    vfl <- sia_val@vfl
+    for (i in seq(1, length(sia_val@ctrlInteractions))){
+      ov <- findOverlaps(vfl, sia_val@ctrlInteractions[[i]])
+      mcols(vfl)[[sia_val@ctrlInteractions[[i]]$tool[1]]] <- '-'
+      mcols(vfl[queryHits(ov),])[sia_val@ctrlInteractions[[i]]$tool[1]] <- 'X'
     }
 
     vfl.df <- vfl %>% as.data.frame(keep.extra.columns = TRUE)
@@ -769,7 +828,8 @@ server <- function(input, output, session) {
           labs(title =  "Please select at least three tools to create an upset plot.")
       }
       else{
-        sia@expInteractions[names(sia@expInteractions) %in% paste0('rep.', sel, '.condition')] %>%
+          sia_val <- sia()
+        sia_val@expInteractions[names(sia_val@expInteractions) %in% paste0('rep.', sel, '.condition')] %>%
           as.list() %>%
           lapply(function(x) as.data.frame(x, stringsAsFactors = FALSE)) %>%
           lapply(function(x) x %>%
@@ -788,7 +848,7 @@ server <- function(input, output, session) {
           labs(title =  "Please select at least three tools to create an upset plot.")
       }
       else{
-        sia@ctrlInteractions[names(sia@ctrlInteractions) %in% paste0('rep.', sel, '.control')] %>%
+        sia_val@ctrlInteractions[names(sia_val@ctrlInteractions) %in% paste0('rep.', sel, '.control')] %>%
           as.list() %>%
           lapply(function(x) as.data.frame(x, stringsAsFactors = FALSE)) %>%
           lapply(function(x) x %>%
@@ -808,7 +868,7 @@ server <- function(input, output, session) {
       }
       else{
         sel <- input$cb_tools
-        comb <- c(sia@expInteractions, sia@ctrlInteractions)
+        comb <- c(sia_val@expInteractions, sia_val@ctrlInteractions)
         comb[names(comb) %in% c(paste0("rep.", sel, ".condition"), paste0("rep.", sel, ".control"))] %>%
           as.list() %>%
           lapply(function(x) as.data.frame(x, stringsAsFactors = FALSE)) %>%
@@ -825,11 +885,13 @@ server <- function(input, output, session) {
 
   # Plot kary ens ----
   output$karyo_ens <- renderPlot({
-      plotConsensusIa(sia, cex.chr = 2, cex.ideo = 1,
+      sia_val <- sia()
+      plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
                                  cex.y.track = 1, cex.vp = 1.5)
   })
 
   observeEvent(input$button_genes_ens, {
+      sia_val <- sia()
     if (is.null(input$genes_select_ens)) {
       genes <- NULL
     } else {
@@ -840,14 +902,14 @@ server <- function(input, output, session) {
       message(genes)
       if (input$spider_ens == FALSE){
         output$karyo_ens <- renderPlot({
-          plotConsensusIa(sia, cex.chr = 2, cex.ideo = 1,
+          plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
                           cex.y.track = 1, cex.vp = 1.5,
                           genes_of_interest = genes)
         })
       } else {
           # Record plot
           k_ens <- reactive({
-              plotConsensusIa(sia, cex.chr = 2, cex.ideo = 1,
+              plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
                               cex.y.track = 1, cex.vp = 1.5, plot_spider = TRUE)
               recordPlot()
           })
@@ -860,7 +922,7 @@ server <- function(input, output, session) {
     } else {
       if (input$spider_ens == FALSE){
       output$karyo_ens <- renderPlot({
-        plotConsensusIa(sia, cex.chr = 2, cex.ideo = 1,
+        plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
                         cex.y.track = 1, cex.vp = 1.5,
           genes_of_interest = genes,
           highlight_regions = input$in_regions_ens
@@ -868,7 +930,7 @@ server <- function(input, output, session) {
       })
       } else {
           k_ens <- reactive({
-              plotConsensusIa(sia, cex.chr = 2, cex.ideo = 1,
+              plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
                               cex.y.track = 1, cex.vp = 1.5,
                               genes_of_interest = genes,
                               highlight_regions = input$in_regions_ens,
@@ -885,8 +947,9 @@ server <- function(input, output, session) {
   #---
 
   output$tab_ens_cond <- renderDataTable({
-    file.out <- paste0('fourSyerngy_ensemble_condition_', sia@metadata$author)
-    sia@expConsensus %>%
+      sia_val <- sia()
+    file.out <- paste0('fourSyerngy_ensemble_condition_', sia_val@metadata$author)
+    sia_val@expConsensus %>%
       as.data.frame(keep.extra.columns = TRUE) %>%
       dplyr::select(seqnames, start, end, tool) %>%
       `colnames<-`(c('Seqnames', 'Start', 'End')) %>%
@@ -901,8 +964,9 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$tab_ens_ctrl <- renderDataTable({
-    file.out <- paste0('fourSyerngy_ensemble_control_', sia@metadata$author)
-    sia@ctrlConsensus %>%
+    sia_val <- sia()
+    file.out <- paste0('fourSyerngy_ensemble_control_', sia_val@metadata$author)
+    sia_val@ctrlConsensus %>%
       as.data.frame(keep.extra.columns = TRUE) %>%
       dplyr::select(seqnames, start, end, tool) %>%
       `colnames<-`(c('Seqnames', 'Start', 'End')) %>%
@@ -917,15 +981,16 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$upset_ens <- renderPlot({
-    gVenn::computeOverlaps(GRangesList(Condition = sia@expConsensus[sia@expConsensus$significance > 0], Control = sia@ctrlConsensus[sia@ctrlConsensus$significance > 0])) %>%
+    sia_val <- sia()
+    gVenn::computeOverlaps(GRangesList(Condition = sia_val@expConsensus[sia_val@expConsensus$significance > 0], Control = sia_val@ctrlConsensus[sia_val@ctrlConsensus$significance > 0])) %>%
       plotVenn(fontsize = 11)
   })
 
-
   output$tab_ens <- renderDataTable({
+      sia_val <- sia()
     file.out <- paste0('fourSyerngy_ensemble_', input$area_venn,
-                       '_', sia@metadata$author)
-    ov <- gVenn::computeOverlaps(GRangesList(Condition = sia@expConsensus[sia@expConsensus$significance > 0], Control = sia@ctrlConsensus[sia@ctrlConsensus$significance > 0]))
+                       '_', sia_val@metadata$author)
+    ov <- gVenn::computeOverlaps(GRangesList(Condition = sia_val@expConsensus[sia_val@expConsensus$significance > 0], Control = sia_val@ctrlConsensus[sia_val@ctrlConsensus$significance > 0]))
     if (input$area_venn == "condition"){
       set <- ov$reduced_regions[ov$reduced_regions$intersect_category == '10']
     } else if (input$area_venn == 'overlap'){
@@ -949,7 +1014,8 @@ server <- function(input, output, session) {
 
   # Diff ----
   output$karyo_diff <- renderPlot({
-    plotDiffIa(sia)  #, cex.chr = 2, cex.ideo = 1, cex.y.track = 1, cex.vp = 1.5
+    sia_val <- sia()
+    plotDiffIa(sia_val)  #, cex.chr = 2, cex.ideo = 1, cex.y.track = 1, cex.vp = 1.5
   })
 
   # observeEvent(input$button_genes_diff, {
@@ -1018,6 +1084,7 @@ server <- function(input, output, session) {
   #   }
   # })
   observeEvent(input$button_genes_diff, {
+      sia_val <- sia()
 
       # Pick genes from the correct input
       if (is.null(input$genes_select_diff)) {
@@ -1031,7 +1098,7 @@ server <- function(input, output, session) {
 
       k_diff <- reactive({
           plotDiffIa(
-              sia,
+              sia_val,
               genes_of_interest = genes,
               highlight_regions = if (region_highlight) input$in_regions_diff else NULL,
               plot_spider = input$spider_diff
@@ -1046,8 +1113,9 @@ server <- function(input, output, session) {
   #---
 
   output$tab_diff <- renderDataTable({
-    file.out <- paste0('fourSyerngy_differential_', sia@metadata$author)
-    sia@differential %>%
+    sia_val <- sia()
+    file.out <- paste0('fourSyerngy_differential_', sia_val@metadata$author)
+    sia_val@differential %>%
       as.data.frame() %>%
       datatable(., extensions = "Buttons",
                 options = list(
@@ -1060,12 +1128,14 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$plot_ma <- renderPlot({
-    sia@differential %>%
+    sia_val <- sia()
+    sia_val@differential %>%
       plotMA()
   })
 
   output$hm_diff <- renderPlot({
-    sia@dds %>%
+    sia_val <- sia()
+    sia_val@dds %>%
       counts() %>%
           heatmap
   })
