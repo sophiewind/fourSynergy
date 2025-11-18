@@ -23,6 +23,7 @@ library(DESeq2)  #
 library(bamsignals)  #
 library(karyoploteR)  #
 library(tibble)  #
+library(yaml)
 source('/home/rstudio/fourSynergy/utils.R')
 source('/home/rstudio/fourSynergy/R/karyoplots.R')
 source('/home/rstudio/fourSynergy/R/plotIaIndividualTools.R')
@@ -72,15 +73,43 @@ border-top-color:#666666;
       tabItem(tabName = "upload",
               fluidRow(
                 column(12,
-                       fileInput("config", "Upload config:", accept = ".yaml"),
-                       fileInput("zip", "Zip and upload results/ directory:", multiple = TRUE),
-                       fileInput("sia", "Upload results/sia directory:", multiple = TRUE),
-                       textOutput("sia_info")  # neues Output-Feld für Debugging-Informationen
+                       fileInput("config", "Upload config (Datasets/[projectname]/info.yaml):", accept = ".yaml", width = 800),
+                       textOutput("config_valid_val"),
+                        #conditionalPanel(
+                          # condition = "output.config_valid == 'TRUE'",
+                           fileInput("multiqc", "Upload multiqc results (Datasets/[projectname]/multiqc_data/):", multiple = TRUE, width = 800),
+                           uiOutput("multiqc_info"),  # neues Output-Feld für Debugging-Informationen
+                           #fileInput("sia", "Upload all files from results/[projectname]/sia/ directory:", multiple = TRUE, width = 800),
+                           uiOutput("sia_info"),  # neues Output-Feld für Debugging-Informationen
+                           fileInput("track_path", "Upload .bam, .bam.bai and .bedGraph files from results/[projectname]/alignment directory:", multiple = TRUE, width = 800),
+                           uiOutput("track_info"),
+                           fileInput("basic_path", "Upload all files from results/[projectname]/basic4cseq/stats directory:", multiple = TRUE, width = 800),
+                      # ),
+                       conditionalPanel(
+                           condition = "output.config_valid == 'FALSE'",
+                           fluidRow(
+                               style = "text-align: center; margin-top: 50px;",
+                               p(
+                                   style = "color: black;",
+                                   "Config file not valid."
+                               )
+                           )),
+                conditionalPanel(
+                    condition = "output.config_valid == 'none'",
+                    fluidRow(
+                        style = "text-align: center; margin-top: 50px;",
+                        p(
+                            style = "color: black;",
+                            "Please upload a config file."
+                        )
+                    ))),
+
                 )
-              )
-      ),
+              ),
 
       tabItem(tabName = "qc",
+              conditionalPanel(
+                  condition = "output.file_ready",
               fluidRow(
                 column(12,
                        h2("Metadata"),
@@ -144,7 +173,6 @@ border-top-color:#666666;
                                          showcase_layout = "top right",
                                          full_screen = TRUE
                                        ))),
-
                        hr(),
 
                        #dataTableOutput("metadata"),
@@ -166,9 +194,20 @@ border-top-color:#666666;
                 )
               )
       ),
+      conditionalPanel(
+          condition = "!output.file_ready",
+          fluidRow(
+              style = "text-align: center; margin-top: 50px;",
+              p(
+                  style = "color: black;",
+                  "Please upload the necessary files to perform the analyses."
+              )
+          ))),
 
       # Base Tools ---------------------------
       tabItem(tabName = "base_tools",
+              conditionalPanel(
+                  condition = "output.file_ready",
               h2("Base tools karyoplot"),
               fluidRow(
                 column(6, withLoader(plotOutput("karyo_base", height = 800),
@@ -226,9 +265,20 @@ border-top-color:#666666;
               plotOutput("upset_base", height = 800),
               hr()
       ),
+      conditionalPanel(
+          condition = "!output.file_ready",
+          fluidRow(
+              style = "text-align: center; margin-top: 50px;",
+              p(
+                  style = "color: black;",
+                  "Please upload the necessary files to perform the analyses."
+              )
+          ))),
 
       # Ensemble -----------------------------
       tabItem(tabName = "ensemble",
+              conditionalPanel(
+                  condition = "output.file_ready",
               fluidRow(
                 column(6,
                        box(title = "Ensemble interaction calling settings",
@@ -286,9 +336,20 @@ border-top-color:#666666;
                                       "control")),
               dataTableOutput("tab_ens")
       ),
+      conditionalPanel(
+          condition = "!output.file_ready",
+          fluidRow(
+              style = "text-align: center; margin-top: 50px;",
+              p(
+                  style = "color: black;",
+                  "Please upload the necessary files to perform the analyses."
+              )
+          ))),
 
       # Differential Analysis ----
       tabItem(tabName = "diff_analysis",
+              conditionalPanel(
+                  condition = "output.file_ready",
               fluidRow(
                 column(6,
                        column(6,
@@ -313,6 +374,7 @@ border-top-color:#666666;
                               ))),
                 column(6,
                        box(h3("Select genes of interest"), width = 6,
+                           solidHeader = TRUE,
                            p("Please be aware that plotting genes can take some time..."),
                            uiOutput('genes_select_diff'),
                            textInput("in_regions_diff", "Please enter genomic regions to highlight.", "chr:start-end"),
@@ -331,6 +393,15 @@ border-top-color:#666666;
 
 
       ),
+      conditionalPanel(
+          condition = "!output.file_ready",
+          fluidRow(
+              style = "text-align: center; margin-top: 50px;",
+              p(
+                  style = "color: black;",
+                  "Please upload the required files to perform the analyses."
+              )
+          ))),
       tabItem("pipeline",
               #fluidRow(
                   h1("Pipeline"),
@@ -347,8 +418,8 @@ border-top-color:#666666;
               )
     )
   )
-))
-
+)
+)
 
 # Definition des Servers
 server <- function(input, output, session) {
@@ -356,38 +427,253 @@ server <- function(input, output, session) {
 
     # Upload logic ####
     destfile_paths <- reactiveVal()
-    output$sia_info <- renderText({
-        req(input$sia)
-        req(input$tracks)
+    trackfile_paths <- reactiveVal()
+    config_path <- reactiveVal()
+    multiqc_paths <- reactiveVal()
+    config <- reactiveVal()
 
-        sia <- input$sia
-        sia <- sia %>% mutate(dir = paste0(dirname(datapath), '/', name))
+    files_ready <- reactiveVal(2)
+    config_valid <- reactiveVal(FALSE)# 0
 
-        print(paste("Typ von'sia':", class(sia)))
-        print(paste("Name der hochgeladenen Datei:", sia$name))
+    observe({
+        req(input$config)
+            cg <- input$config
+            cg <- cg %>% mutate(dir = paste0(dirname(datapath), '/', name))
+            cat("config_valid vorher:", config_valid())
 
-        uploads_dir <- file.path(getwd(), "results/Geeven_sox/sia")  # TODO add author to dirname
-        dir.create(uploads_dir, recursive = T)
-        print(paste("Verzeichnis für hochgeladene Dateien:", uploads_dir))
+                # Increment files_ready
+                isolate({
+                    files_ready(files_ready() + 1)
+                })
+                   if ( check_info(cg$datapath)){
+                       message("Check ok")
+                      config_valid(TRUE)
+                      # cat("config_valid vorher:", config_valid())
+                      config(read_yaml(cg$datapath))
+                   uploads_dir <- file.path(getwd(), paste0("/Datasets/", config()$author, "/"))  # TODO add author to dirname
+                   dir.create(uploads_dir, recursive = T)
+                   print(paste("Verzeichnis für hochgeladene config:", uploads_dir))
+                   destfile <- file.path(uploads_dir, cg$name)
+                   config_path(destfile)
+                   file.copy(cg$datapath, destfile, overwrite = TRUE)
+               } else {
+                   message("Check failed")
 
-        destfile <- file.path(uploads_dir, sia$name)
+                   config_valid(FALSE)
+               }
 
-        # eleganter
-        destfile_paths(paste0(getwd(), "/results/Geeven_sox//"))
-
-        for (i in seq_along(sia$name)) {
-            print(sia$datapath[i])
-            if (endsWith(sia$name[i], 'nearbait_area.bed')){
-                file.copy(sia$datapath[i], gsub(pattern = 'sia', '', destfile[i]), overwrite = TRUE)
-                print(gsub(pattern = 'sia', '', destfile[i]))
-            } else {
-                file.copy(sia$datapath[i], destfile[i], overwrite = TRUE)
-            }
-        }
-        message(file.exists( sia$datapath[i]))
-        message(file.exists( destfile[i]))
-        message(destfile_paths())
     })
+
+    output$config_val <- renderText({
+        as.character(config_valid())
+    })
+    # Code is running but slow ---
+    # output$sia_info <- renderUI({
+    #     req(input$sia)
+    #     sias <- input$sia
+    #     sias <- sias %>% mutate(dir = paste0(dirname(datapath), '/', name))
+    #
+    #     # print(paste("Typ von'sias':", class(sias)))
+    #     # print(paste("Name der hochgeladenen Datei:", sias$name))
+    #     req_sias <- paste0("Geeven_sox_",rep(c("foursig_1",
+    #                                            "foursig_3",
+    #                                            "foursig_5",
+    #                                            "foursig_11",
+    #                                            "r3c_2000",
+    #                                            "r3c_5000",
+    #                                            "r3c_10000",
+    #                                            "peakcSig_11",
+    #                                            "peakcSig_21",
+    #                                            "peakcSig_31",
+    #                                            "peakcSig_51",
+    #                                            "r4cker_nearbait"), 2), '_',
+    #                        rep(c('condition', 'control'), each = 12), '_nearbait.bed')
+    #
+    #     missing_sia <- req_sias[!req_sias %in% sias$name]
+    #
+    #     if (length(missing_sia) > 0) {
+    #         tagList(
+    #             tags$p(style = "color: red;",
+    #                    "The following files are missing:"),
+    #             tags$ul(
+    #                 lapply(missing_sia, function(x) tags$li(x))
+    #             )
+    #         )
+    #     } else {
+    #         tags$p(style = "color: green;", "All paths are available.")
+    #
+    #         # Increment files_ready
+    #         isolate({
+    #             files_ready(files_ready() + 1)
+    #         })
+    #
+    #     uploads_dir <- file.path(getwd(), "results/Geeven_sox/sia")  # TODO add author to dirname
+    #     dir.create(uploads_dir, recursive = T)
+    #     print(paste("Verzeichnis für hochgeladene Dateien:", uploads_dir))
+    #
+    #     destfile <- file.path(uploads_dir, sias$name)
+    #
+    #     # eleganter
+    #     destfile_paths(paste0(getwd(), "/results/Geeven_sox//"))
+    #
+    #     for (i in seq_along(sias$name)) {
+    #         print(sias$datapath[i])
+    #         if (endsWith(sias$name[i], 'nearbait_area.bed')){
+    #             file.copy(sias$datapath[i], gsub(pattern = 'sia', '', destfile[i]), overwrite = TRUE)
+    #             print(gsub(pattern = 'sia', '', destfile[i]))
+    #         } else {
+    #             file.copy(sias$datapath[i], destfile[i], overwrite = TRUE)
+    #         }
+    #     }
+    #     }
+    # })
+
+
+    # Code is running but slow
+    # output$track_info <- renderUI({
+    #     req(input$track_path)
+    #
+    #     # Tracks in ####
+    #     tp <- input$track_path
+    #     tp <<- tp %>% mutate(dir = paste0(dirname(datapath), '/', name))
+    #
+    #     # Check if all files there
+    #     req_align <- paste0(rep(paste0(c("ESC_", "FL_"),
+    #                                rep(seq(1,3), each = 3)), each = 2),
+    #                     c("_sorted.bam","_sorted.bam.bai", "_sorted.bedGraph"))
+    #
+    #     missing_a <- req_align[!req_align %in% tp$name]
+    #
+    #     if (length(missing_a) > 0) {
+    #         tagList(
+    #             tags$p(style = "color: red;",
+    #                    "The following files are missing:"),
+    #             tags$ul(
+    #                 lapply(missing_a, function(x) tags$li(x))
+    #             )
+    #         )
+    #     } else {
+    #         tags$p(style = "color: green;", "All paths are available.")
+    #
+    #         # Increment files_ready
+    #         isolate({
+    #             files_ready(files_ready() + 1)
+    #         })
+    #
+    #
+    #     print(paste("Name der hochgeladenen Datei:", tp$name))
+    #     uploads_dir <- file.path(getwd(), "results/Geeven_sox/alignment")  # TODO add author to dirname
+    #     dir.create(uploads_dir, recursive = T)
+    #     print(paste("Verzeichnis für upload files:", uploads_dir))
+    #     destfile <- file.path(uploads_dir, tp$name)
+    #     trackfile_paths(paste0(getwd(), "/results/Geeven_sox/alignment/"))
+    #     for (i in seq_along(tp$name)) {
+    #         print(destfile[i])
+    #         file.copy(tp$datapath[i], destfile[i], overwrite = TRUE)
+    #     }
+    #     message(paste0("### ", getwd(),
+    #                    "/results/Geeven_sox/alignment/"))
+    #     }
+    # })
+
+    output$basic_path <- renderUI({
+        req(input$basic_path)
+
+        # Tracks in ####
+        bp <- input$basic_path
+        bp <<- bp %>% mutate(dir = paste0(dirname(datapath), '/', name))
+
+        # Check if all files there
+        req_align <- paste0(rep(c("ESC_", "FL_"), each = 3),
+                            rep(seq(1,3),2), "_stats.txt")
+
+        missing_a <- req_align[!req_align %in% bp$name]
+
+        if (length(missing_a) > 0) {
+            tagList(
+                tags$p(style = "color: red;",
+                       "The following files are missing:"),
+                tags$ul(
+                    lapply(missing_a, function(x) tags$li(x))
+                )
+            )
+        } else {
+            tags$p(style = "color: green;", "All paths are available.")
+
+            # Increment files_ready
+            isolate({
+                files_ready(files_ready() + 1)
+            })
+
+
+        print(paste("Name der hochgeladenen Datei:", bp$name))
+        uploads_dir <- file.path(getwd(), "results/Geeven_sox/alignment")  # TODO add author to dirname
+        dir.create(uploads_dir, recursive = T)
+        print(paste("Verzeichnis für upload files:", uploads_dir))
+        destfile <- file.path(uploads_dir, tp$name)
+        trackfile_paths(paste0(getwd(), "/results/Geeven_sox/alignment/"))
+        for (i in seq_along(tp$name)) {
+            print(destfile[i])
+            file.copy(bp$datapath[i], destfile[i], overwrite = TRUE)
+        }
+        message(paste0("### ", getwd(),
+                       "/results/Geeven_sox/alignment/"))
+        }
+    })
+
+    output$multiqc_info <- renderUI({
+        req(input$multiqc)
+        mq <- input$multiqc
+        mq <<- mq %>% mutate(dir = paste0(dirname(datapath), '/', name))
+
+        # Check if all files there
+        req_mq <- c('multiqc_fastqc.txt',
+                            'fastqc_per_sequence_quality_scores_plot.txt',
+                            'samtools-flagstat-pct-table.txt')
+
+        missing_mq <- req_mq[!req_mq %in% mq$name]
+
+        if (length(missing_mq) > 0) {
+            tagList(
+                tags$p(style = "color: red;",
+                       "The following files are missing:"),
+                tags$ul(
+                    lapply(missing_mq, function(x) tags$li(x))
+                )
+            )
+        } else {
+            tags$p(style = "color: green;", "All paths are available.")
+
+            # Increment files_ready
+            isolate({
+                files_ready(files_ready() + 1)
+            })
+
+
+        print(paste("Name der hochgeladenen Datei:", mq$name))
+        uploads_dir <- file.path(getwd(), "results/", config()$author, "/multiqc_data")  # TODO add author to dirname
+        dir.create(uploads_dir, recursive = T)
+        print(paste("Verzeichnis für upload files:", uploads_dir))
+        destfile <- file.path(uploads_dir, mq$name)
+        multiqc_paths(paste0(getwd(), "/results/", config()$author, "/multiqc_data/"))
+        for (i in seq_along(mq$name)) {
+            print(destfile[i])
+            file.copy(mq$datapath[i], destfile[i], overwrite = TRUE)
+        }
+        message(paste0("### ", getwd(),
+                       "/results/", config()$author, "/multiqc_data/"))
+        }
+    })
+
+    # ---
+
+
+    # Display conditional panels if file is uploaded successfully
+    output$file_ready <- reactive({
+        if (files_ready() >= 2) TRUE
+    })
+
+    outputOptions(output, "file_ready", suspendWhenHidden = FALSE)
 
     # Input regions control
     iv <- InputValidator$new()
@@ -439,11 +725,17 @@ server <- function(input, output, session) {
 
 
   # Create sia ----
-  sia <- reactive({createIa(destfile_paths(),
-                  '/host/Datasets/Geeven_sox/info.yaml',
-                  '/host/results/Geeven_sox/alignment/')})
-  # sia <- consensusIa(sia, model = 'AUPRC')
-  # sia <- differentialAnalysis(sia)
+  sia <- reactive({
+      createIa("/host/results/Geeven_sox/",  #destfile_paths()
+                            config_path(), #'/host/Datasets/Geeven_sox/info.yaml',
+                  "/host/results/Geeven_sox/alignment/")}) # trackfile_paths()
+
+    sia_ens <- eventReactive(input$run_ens, {
+        consensusIa(sia(), model = input$rb_model)
+    })
+
+  sia_diff <-  eventReactive(input$run_ens,{
+      differentialAnalysis(sia_ens())})
 
   # Metadata ----
   output$meta_org <- renderValueBox({
@@ -522,10 +814,11 @@ server <- function(input, output, session) {
 
   # Seq ----
   output$fastqc_tab <- renderDataTable({
+      req(files_ready() >= 2)
       file.out <- paste0('fourSyerngy_fastqc_', sia()@metadata$author)
 
     # Quality table
-    read.delim("/host/results/Geeven_sox/multiqc_data/multiqc_fastqc.txt") %>%
+    read.delim(paste0(multiqc_paths(), "/multiqc_fastqc.txt")) %>%
       DT::datatable(., extensions = "Buttons",
                     options = list(
                         dom = "Bfrtip",
@@ -538,14 +831,14 @@ server <- function(input, output, session) {
 
   # TODO change order, etc. -> see multiqc
   output$seq_plot <- renderPlot({
-    read.delim("/host/results/Geeven_sox/multiqc_data/fastqc_sequence_counts_plot.txt") %>%
+    read.delim(paste0(multiqc_paths(), "/fastqc_sequence_counts_plot.txt")) %>%
       melt() %>%
       ggplot(., aes(x = value, y = Sample, fill = variable)) +
       geom_bar(stat = 'identity')
   })
 
   output$seq_qual <- renderPlot({
-    read.delim("/host/results/Geeven_sox/multiqc_data/fastqc_per_sequence_quality_scores_plot.txt") %>%
+    read.delim(paste0(multiqc_paths(), "fastqc_per_sequence_quality_scores_plot.txt")) %>%
       pivot_longer(cols = starts_with("X"), names_to = "time", values_to = "val") %>%
       mutate(
         val = gsub("\\(|\\)", "", val),
@@ -571,7 +864,7 @@ server <- function(input, output, session) {
   output$align_tab <- renderDataTable({
       file.out <- paste0('fourSyerngy_flagstat_', sia()@metadata$author)
 
-    read.delim('/host/results/Geeven_sox/multiqc_data_1/samtools-flagstat-pct-table.txt') %>%
+    read.delim(paste0(multiqc_paths(), '/samtools-flagstat-pct-table.txt')) %>%
       datatable(colnames = paste0(gsub('\\.', ' ', colnames(.)), " (%)"),
                 rownames = FALSE,
                 extensions = "Buttons",
@@ -871,13 +1164,11 @@ server <- function(input, output, session) {
 
   # Plot kary ens ----
   output$karyo_ens <- renderPlot({
-      sia_val <- sia()
-      plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
+      plotConsensusIa(sia_ens(), cex.chr = 2, cex.ideo = 1,
                                  cex.y.track = 1, cex.vp = 1.5)
   })
 
   observeEvent(input$button_genes_ens, {
-      sia_val <- sia()
     if (is.null(input$genes_select_ens)) {
       genes <- NULL
     } else {
@@ -888,14 +1179,14 @@ server <- function(input, output, session) {
       message(genes)
       if (input$spider_ens == FALSE){
         output$karyo_ens <- renderPlot({
-          plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
+          plotConsensusIa(sia_ens(), cex.chr = 2, cex.ideo = 1,
                           cex.y.track = 1, cex.vp = 1.5,
                           genes_of_interest = genes)
         })
       } else {
           # Record plot
           k_ens <- reactive({
-              plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
+              plotConsensusIa(sia_ens(), cex.chr = 2, cex.ideo = 1,
                               cex.y.track = 1, cex.vp = 1.5, plot_spider = TRUE)
               recordPlot()
           })
@@ -908,7 +1199,7 @@ server <- function(input, output, session) {
     } else {
       if (input$spider_ens == FALSE){
       output$karyo_ens <- renderPlot({
-        plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
+        plotConsensusIa(sia_ens(), cex.chr = 2, cex.ideo = 1,
                         cex.y.track = 1, cex.vp = 1.5,
           genes_of_interest = genes,
           highlight_regions = input$in_regions_ens
@@ -916,7 +1207,7 @@ server <- function(input, output, session) {
       })
       } else {
           k_ens <- reactive({
-              plotConsensusIa(sia_val, cex.chr = 2, cex.ideo = 1,
+              plotConsensusIa(sia_ens(), cex.chr = 2, cex.ideo = 1,
                               cex.y.track = 1, cex.vp = 1.5,
                               genes_of_interest = genes,
                               highlight_regions = input$in_regions_ens,
@@ -933,11 +1224,10 @@ server <- function(input, output, session) {
   #---
 
   output$tab_ens_cond <- renderDataTable({
-      sia_val <- sia()
-    file.out <- paste0('fourSyerngy_ensemble_condition_', sia_val@metadata$author)
-    sia_val@expConsensus %>%
+    file.out <- paste0('fourSyerngy_ensemble_condition_', sia_ens()@metadata$author)
+    sia_ens()@expConsensus %>%
       as.data.frame(keep.extra.columns = TRUE) %>%
-      dplyr::select(seqnames, start, end, tool) %>%
+      dplyr::select(seqnames, start, end) %>%
       `colnames<-`(c('Seqnames', 'Start', 'End')) %>%
       datatable(rownames = FALSE, extensions = "Buttons",
                 options = list(
@@ -950,11 +1240,10 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$tab_ens_ctrl <- renderDataTable({
-    sia_val <- sia()
-    file.out <- paste0('fourSyerngy_ensemble_control_', sia_val@metadata$author)
-    sia_val@ctrlConsensus %>%
+    file.out <- paste0('fourSyerngy_ensemble_control_', sia_ens()@metadata$author)
+    sia_ens()@ctrlConsensus %>%
       as.data.frame(keep.extra.columns = TRUE) %>%
-      dplyr::select(seqnames, start, end, tool) %>%
+      dplyr::select(seqnames, start, end) %>%
       `colnames<-`(c('Seqnames', 'Start', 'End')) %>%
       datatable(rownames = FALSE, extensions = "Buttons",
                 options = list(
@@ -967,16 +1256,14 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$upset_ens <- renderPlot({
-    sia_val <- sia()
-    gVenn::computeOverlaps(GRangesList(Condition = sia_val@expConsensus[sia_val@expConsensus$significance > 0], Control = sia_val@ctrlConsensus[sia_val@ctrlConsensus$significance > 0])) %>%
+    gVenn::computeOverlaps(GRangesList(Condition = sia_ens()@expConsensus[sia_ens()@expConsensus$significance > 0], Control = sia_ens()@ctrlConsensus[sia_ens()@ctrlConsensus$significance > 0])) %>%
       plotVenn(fontsize = 11)
   })
 
   output$tab_ens <- renderDataTable({
-      sia_val <- sia()
     file.out <- paste0('fourSyerngy_ensemble_', input$area_venn,
-                       '_', sia_val@metadata$author)
-    ov <- gVenn::computeOverlaps(GRangesList(Condition = sia_val@expConsensus[sia_val@expConsensus$significance > 0], Control = sia_val@ctrlConsensus[sia_val@ctrlConsensus$significance > 0]))
+                       '_', sia_ens()@metadata$author)
+    ov <- gVenn::computeOverlaps(GRangesList(Condition = sia_ens()@expConsensus[sia_ens()@expConsensus$significance > 0], Control = sia_ens()@ctrlConsensus[sia_ens()@ctrlConsensus$significance > 0]))
     if (input$area_venn == "condition"){
       set <- ov$reduced_regions[ov$reduced_regions$intersect_category == '10']
     } else if (input$area_venn == 'overlap'){
@@ -1000,8 +1287,7 @@ server <- function(input, output, session) {
 
   # Diff ----
   output$karyo_diff <- renderPlot({
-    sia_val <- sia()
-    plotDiffIa(sia_val)  #, cex.chr = 2, cex.ideo = 1, cex.y.track = 1, cex.vp = 1.5
+    plotDiffIa(sia_diff())  #, cex.chr = 2, cex.ideo = 1, cex.y.track = 1, cex.vp = 1.5
   })
 
   # observeEvent(input$button_genes_diff, {
@@ -1070,7 +1356,6 @@ server <- function(input, output, session) {
   #   }
   # })
   observeEvent(input$button_genes_diff, {
-      sia_val <- sia()
 
       # Pick genes from the correct input
       if (is.null(input$genes_select_diff)) {
@@ -1084,7 +1369,7 @@ server <- function(input, output, session) {
 
       k_diff <- reactive({
           plotDiffIa(
-              sia_val,
+              sia_diff(),
               genes_of_interest = genes,
               highlight_regions = if (region_highlight) input$in_regions_diff else NULL,
               plot_spider = input$spider_diff
@@ -1099,9 +1384,8 @@ server <- function(input, output, session) {
   #---
 
   output$tab_diff <- renderDataTable({
-    sia_val <- sia()
-    file.out <- paste0('fourSyerngy_differential_', sia_val@metadata$author)
-    sia_val@differential %>%
+    file.out <- paste0('fourSyerngy_differential_', sia_diff()@metadata$author)
+    sia_diff()@differential %>%
       as.data.frame() %>%
       datatable(., extensions = "Buttons",
                 options = list(
@@ -1114,14 +1398,12 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$plot_ma <- renderPlot({
-    sia_val <- sia()
-    sia_val@differential %>%
+      sia_diff()@differential %>%
       plotMA()
   })
 
   output$hm_diff <- renderPlot({
-    sia_val <- sia()
-    sia_val@dds %>%
+      sia_diff()@dds %>%
       counts() %>%
           heatmap
   })
