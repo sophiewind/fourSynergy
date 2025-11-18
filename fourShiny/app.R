@@ -70,23 +70,23 @@ border-top-color:#666666;
                                     ")),
     style = "background-color: #FFFFFF;",
     tabItems(
+        # Upload ----------------------------------
       tabItem(tabName = "upload",
               fluidRow(
                 column(12,
                        fileInput("config", "Upload config (Datasets/[projectname]/info.yaml):", accept = ".yaml", width = 800),
                        textOutput("config_valid_val"),
-                        #conditionalPanel(
-                          # condition = "output.config_valid == 'TRUE'",
-                           fileInput("multiqc", "Upload multiqc results (Datasets/[projectname]/multiqc_data/):", multiple = TRUE, width = 800),
+                        conditionalPanel(
+                           condition = "output.config_status == 1",
+                           fileInput("shiny_in", "Upload all files from (Datasets/[projectname]/shiny_in/):", multiple = TRUE, width = 800),
+                           uiOutput("shiny_in_info"),  # neues Output-Feld für Debugging-Informationen
                            uiOutput("multiqc_info"),  # neues Output-Feld für Debugging-Informationen
-                           #fileInput("sia", "Upload all files from results/[projectname]/sia/ directory:", multiple = TRUE, width = 800),
                            uiOutput("sia_info"),  # neues Output-Feld für Debugging-Informationen
-                           fileInput("track_path", "Upload .bam, .bam.bai and .bedGraph files from results/[projectname]/alignment directory:", multiple = TRUE, width = 800),
                            uiOutput("track_info"),
-                           fileInput("basic_path", "Upload all files from results/[projectname]/basic4cseq/stats directory:", multiple = TRUE, width = 800),
-                      # ),
+                           uiOutput("basic_info"),
+                       ),
                        conditionalPanel(
-                           condition = "output.config_valid == 'FALSE'",
+                           condition = "output.config_status == -1",
                            fluidRow(
                                style = "text-align: center; margin-top: 50px;",
                                p(
@@ -95,7 +95,7 @@ border-top-color:#666666;
                                )
                            )),
                 conditionalPanel(
-                    condition = "output.config_valid == 'none'",
+                    condition = "output.config_status == 0",
                     fluidRow(
                         style = "text-align: center; margin-top: 50px;",
                         p(
@@ -431,10 +431,13 @@ server <- function(input, output, session) {
     config_path <- reactiveVal()
     multiqc_paths <- reactiveVal()
     config <- reactiveVal()
+    basic_paths <- reactiveVal()
+
 
     files_ready <- reactiveVal(2)
-    config_valid <- reactiveVal(FALSE)# 0
+    config_valid <- reactiveVal(0)# 0
 
+    # Config check ----
     observe({
         req(input$config)
             cg <- input$config
@@ -445,12 +448,14 @@ server <- function(input, output, session) {
                 isolate({
                     files_ready(files_ready() + 1)
                 })
-                   if ( check_info(cg$datapath)){
+                   if (check_info(cg$datapath)){
                        message("Check ok")
-                      config_valid(TRUE)
+                      config_valid(1)
+                      cat("config_valid nachher:", config_valid())
+
                       # cat("config_valid vorher:", config_valid())
                       config(read_yaml(cg$datapath))
-                   uploads_dir <- file.path(getwd(), paste0("/Datasets/", config()$author, "/"))  # TODO add author to dirname
+                   uploads_dir <- file.path(getwd(), paste0("/Datasets/", config()$author, "/"))
                    dir.create(uploads_dir, recursive = T)
                    print(paste("Verzeichnis für hochgeladene config:", uploads_dir))
                    destfile <- file.path(uploads_dir, cg$name)
@@ -459,133 +464,145 @@ server <- function(input, output, session) {
                } else {
                    message("Check failed")
 
-                   config_valid(FALSE)
+                   config_valid(-1)
                }
 
     })
+#
+#     output$config_val <- renderText({
+#         as.character(config_valid())
+#     })
 
-    output$config_val <- renderText({
-        as.character(config_valid())
-    })
+
+
+
     # Code is running but slow ---
-    # output$sia_info <- renderUI({
-    #     req(input$sia)
-    #     sias <- input$sia
-    #     sias <- sias %>% mutate(dir = paste0(dirname(datapath), '/', name))
-    #
-    #     # print(paste("Typ von'sias':", class(sias)))
-    #     # print(paste("Name der hochgeladenen Datei:", sias$name))
-    #     req_sias <- paste0("Geeven_sox_",rep(c("foursig_1",
-    #                                            "foursig_3",
-    #                                            "foursig_5",
-    #                                            "foursig_11",
-    #                                            "r3c_2000",
-    #                                            "r3c_5000",
-    #                                            "r3c_10000",
-    #                                            "peakcSig_11",
-    #                                            "peakcSig_21",
-    #                                            "peakcSig_31",
-    #                                            "peakcSig_51",
-    #                                            "r4cker_nearbait"), 2), '_',
-    #                        rep(c('condition', 'control'), each = 12), '_nearbait.bed')
-    #
-    #     missing_sia <- req_sias[!req_sias %in% sias$name]
-    #
-    #     if (length(missing_sia) > 0) {
-    #         tagList(
-    #             tags$p(style = "color: red;",
-    #                    "The following files are missing:"),
-    #             tags$ul(
-    #                 lapply(missing_sia, function(x) tags$li(x))
-    #             )
-    #         )
-    #     } else {
-    #         tags$p(style = "color: green;", "All paths are available.")
-    #
-    #         # Increment files_ready
-    #         isolate({
-    #             files_ready(files_ready() + 1)
-    #         })
-    #
-    #     uploads_dir <- file.path(getwd(), "results/Geeven_sox/sia")  # TODO add author to dirname
-    #     dir.create(uploads_dir, recursive = T)
-    #     print(paste("Verzeichnis für hochgeladene Dateien:", uploads_dir))
-    #
-    #     destfile <- file.path(uploads_dir, sias$name)
-    #
-    #     # eleganter
-    #     destfile_paths(paste0(getwd(), "/results/Geeven_sox//"))
-    #
-    #     for (i in seq_along(sias$name)) {
-    #         print(sias$datapath[i])
-    #         if (endsWith(sias$name[i], 'nearbait_area.bed')){
-    #             file.copy(sias$datapath[i], gsub(pattern = 'sia', '', destfile[i]), overwrite = TRUE)
-    #             print(gsub(pattern = 'sia', '', destfile[i]))
-    #         } else {
-    #             file.copy(sias$datapath[i], destfile[i], overwrite = TRUE)
-    #         }
-    #     }
-    #     }
-    # })
+    output$sia_info <- renderUI({
+        req(input$shiny_in)
+        sias <- input$shiny_in
+        sias <- sias %>% mutate(dir = paste0(dirname(datapath), '/', name))
+        req_sias <- paste0(config()$author, "_", rep(c("foursig_1",
+                                               "foursig_3",
+                                               "foursig_5",
+                                               "foursig_11",
+                                               "r3c_2000",
+                                               "r3c_5000",
+                                               "r3c_10000",
+                                               "peakcSig_11",
+                                               "peakcSig_21",
+                                               "peakcSig_31",
+                                               "peakcSig_51",
+                                               "r4cker_nearbait"), 2), '_',
+                           rep(c('condition', 'control'), each = 12), '_nearbait.bed')
+
+        missing_sia <- req_sias[!req_sias %in% sias$name]
+
+        if (length(missing_sia) > 0) {
+            tagList(
+                tags$p(style = "color: red;",
+                       "The following interaction files are missing:"),
+                tags$ul(
+                    lapply(missing_sia, function(x) tags$li(x))
+                )
+            )
+        } else {
+            tags$p(style = "color: green;", "All paths are available.")
+
+            # Increment files_ready
+            isolate({
+                files_ready(files_ready() + 1)
+            })
+
+        uploads_dir <- file.path(getwd(),  paste0("/Datasets/", config()$author, "/sia/"))
+        dir.create(uploads_dir, recursive = T)
+        print(paste("Verzeichnis für hochgeladene Dateien:", uploads_dir))
+
+        destfile <- file.path(uploads_dir, sias$name)
+
+        # eleganter
+        destfile_paths(paste0(getwd(), "/results/", config()$author, "/"))
+
+        for (i in seq_along(sias$name)) {
+            print(sias$datapath[i])
+            if (endsWith(sias$name[i], 'nearbait_area.bed')){
+                file.copy(sias$datapath[i], gsub(pattern = 'sia', '',
+                                                 destfile[i]), overwrite = TRUE)
+                print(gsub(pattern = 'sia', '', destfile[i]))
+            } else {
+                file.copy(sias$datapath[i], destfile[i], overwrite = TRUE)
+            }
+        }
+        }
+    })
 
 
-    # Code is running but slow
-    # output$track_info <- renderUI({
-    #     req(input$track_path)
-    #
-    #     # Tracks in ####
-    #     tp <- input$track_path
-    #     tp <<- tp %>% mutate(dir = paste0(dirname(datapath), '/', name))
-    #
-    #     # Check if all files there
-    #     req_align <- paste0(rep(paste0(c("ESC_", "FL_"),
-    #                                rep(seq(1,3), each = 3)), each = 2),
-    #                     c("_sorted.bam","_sorted.bam.bai", "_sorted.bedGraph"))
-    #
-    #     missing_a <- req_align[!req_align %in% tp$name]
-    #
-    #     if (length(missing_a) > 0) {
-    #         tagList(
-    #             tags$p(style = "color: red;",
-    #                    "The following files are missing:"),
-    #             tags$ul(
-    #                 lapply(missing_a, function(x) tags$li(x))
-    #             )
-    #         )
-    #     } else {
-    #         tags$p(style = "color: green;", "All paths are available.")
-    #
-    #         # Increment files_ready
-    #         isolate({
-    #             files_ready(files_ready() + 1)
-    #         })
-    #
-    #
-    #     print(paste("Name der hochgeladenen Datei:", tp$name))
-    #     uploads_dir <- file.path(getwd(), "results/Geeven_sox/alignment")  # TODO add author to dirname
-    #     dir.create(uploads_dir, recursive = T)
-    #     print(paste("Verzeichnis für upload files:", uploads_dir))
-    #     destfile <- file.path(uploads_dir, tp$name)
-    #     trackfile_paths(paste0(getwd(), "/results/Geeven_sox/alignment/"))
-    #     for (i in seq_along(tp$name)) {
-    #         print(destfile[i])
-    #         file.copy(tp$datapath[i], destfile[i], overwrite = TRUE)
-    #     }
-    #     message(paste0("### ", getwd(),
-    #                    "/results/Geeven_sox/alignment/"))
-    #     }
-    # })
-
-    output$basic_path <- renderUI({
-        req(input$basic_path)
+    #Code is running but slow
+    output$track_info <- renderUI({
+        req(input$shiny_in)
 
         # Tracks in ####
-        bp <- input$basic_path
-        bp <<- bp %>% mutate(dir = paste0(dirname(datapath), '/', name))
+        tp <- input$shiny_in
+        tp <<- tp %>% mutate(dir = paste0(dirname(datapath), '/', name))
 
         # Check if all files there
-        req_align <- paste0(rep(c("ESC_", "FL_"), each = 3),
-                            rep(seq(1,3),2), "_stats.txt")
+        if (!is.null(config()$control)){
+            req_align <- paste0(rep(paste0(c(config()$condition, config()$control), "_",  # TODO
+                                           rep(seq(1, max(config()$conditionRep)), each = 2)), each = 3),
+                                c("_sorted.bam","_sorted.bam.bai", "_sorted.bedGraph"))
+        } else {
+            req_align <- paste0(rep(paste0(paste0(config()$condition, "_"), seq(1,max(config()$conditionRep))), each = 3),  # TODO seq
+                                c("_sorted.bam","_sorted.bam.bai", "_sorted.bedGraph"))
+        }
+
+        missing_a <- req_align[!req_align %in% tp$name]
+
+        if (length(missing_a) > 0) {
+            tagList(
+                tags$p(style = "color: red;",
+                       "The following files are missing:"),
+                tags$ul(
+                    lapply(missing_a, function(x) tags$li(x))
+                )
+            )
+        } else {
+            tags$p(style = "color: green;", "All paths are available.")
+
+            # Increment files_ready
+            isolate({
+                files_ready(files_ready() + 1)
+            })
+
+
+        print(paste("Name der hochgeladenen Datei:", tp$name))
+        uploads_dir <- file.path(paste0(getwd(), "/results/", config()$author, "/alignment/"))
+        dir.create(uploads_dir, recursive = T)
+        print(paste("Verzeichnis für upload files:", uploads_dir))
+        destfile <- file.path(uploads_dir, tp$name)
+        trackfile_paths(paste0(getwd(), "/results/", config()$author, "/"))
+        for (i in seq_along(tp$name)) {
+            print(destfile[i])
+            file.copy(tp$datapath[i], destfile[i], overwrite = TRUE)
+        }
+        message(paste0("### ", paste0(getwd(), "/results/", config()$author, "/")))
+        }
+    })
+
+    output$basic_info <- renderUI({
+        req(input$shiny_in)
+
+        # Tracks in ####
+        bp <- input$shiny_in
+        bp <- bp %>% mutate(dir = paste0(dirname(datapath), '/', name))
+
+        # Check if all files there
+        if (!is.null(config()$control)){
+            req_align <- paste0(rep(paste0(c(config()$condition, config()$control), "_",
+                                           rep(seq(1, max(config()$conditionRep)), each = 2))),
+                                "_stats.txt")
+        } else {
+            req_align <- paste0(rep(paste0(paste0(config()$condition, "_"), seq(1,max(config()$conditionRep)))),
+                                "_stats.txt")
+        }
 
         missing_a <- req_align[!req_align %in% bp$name]
 
@@ -605,41 +622,37 @@ server <- function(input, output, session) {
                 files_ready(files_ready() + 1)
             })
 
-
-        print(paste("Name der hochgeladenen Datei:", bp$name))
-        uploads_dir <- file.path(getwd(), "results/Geeven_sox/alignment")  # TODO add author to dirname
-        dir.create(uploads_dir, recursive = T)
-        print(paste("Verzeichnis für upload files:", uploads_dir))
-        destfile <- file.path(uploads_dir, tp$name)
-        trackfile_paths(paste0(getwd(), "/results/Geeven_sox/alignment/"))
-        for (i in seq_along(tp$name)) {
-            print(destfile[i])
-            file.copy(bp$datapath[i], destfile[i], overwrite = TRUE)
-        }
-        message(paste0("### ", getwd(),
-                       "/results/Geeven_sox/alignment/"))
-        }
+            uploads_dir <- file.path(paste0(getwd(), "/results/", config()$author, "/basic4cseq/stats/"))  # TODO add author to dirname
+            dir.create(uploads_dir, recursive = T)
+            print(paste("Verzeichnis für upload files:", uploads_dir))
+            destfile <- file.path(uploads_dir, tp$name)
+            basic_paths(paste0(getwd(), "/results/", config()$author, "/basic4cseq/stats/"))
+            # More elegan
+            for (i in seq_along(tp$name)) {
+                print(destfile[i])
+                file.copy(bp$datapath[i], destfile[i], overwrite = TRUE)
+            }
+            }
     })
 
     output$multiqc_info <- renderUI({
-        req(input$multiqc)
-        mq <- input$multiqc
+        req(input$shiny_in)
+        mq <- input$shiny_in
         mq <<- mq %>% mutate(dir = paste0(dirname(datapath), '/', name))
 
         # Check if all files there
         req_mq <- c('multiqc_fastqc.txt',
-                            'fastqc_per_sequence_quality_scores_plot.txt',
-                            'samtools-flagstat-pct-table.txt')
+                    'fastqc_per_sequence_quality_scores_plot.txt',
+                    'samtools-flagstat-pct-table.txt')
 
         missing_mq <- req_mq[!req_mq %in% mq$name]
 
         if (length(missing_mq) > 0) {
-            tagList(
-                tags$p(style = "color: red;",
-                       "The following files are missing:"),
-                tags$ul(
-                    lapply(missing_mq, function(x) tags$li(x))
-                )
+            tagList(tags$p(style = "color: red;",
+                           "The following QC files are missing:"),
+                    tags$ul(
+                        lapply(missing_mq, function(x) tags$li(x))
+                    )
             )
         } else {
             tags$p(style = "color: green;", "All paths are available.")
@@ -649,19 +662,18 @@ server <- function(input, output, session) {
                 files_ready(files_ready() + 1)
             })
 
-
-        print(paste("Name der hochgeladenen Datei:", mq$name))
-        uploads_dir <- file.path(getwd(), "results/", config()$author, "/multiqc_data")  # TODO add author to dirname
-        dir.create(uploads_dir, recursive = T)
-        print(paste("Verzeichnis für upload files:", uploads_dir))
-        destfile <- file.path(uploads_dir, mq$name)
-        multiqc_paths(paste0(getwd(), "/results/", config()$author, "/multiqc_data/"))
-        for (i in seq_along(mq$name)) {
-            print(destfile[i])
-            file.copy(mq$datapath[i], destfile[i], overwrite = TRUE)
-        }
-        message(paste0("### ", getwd(),
-                       "/results/", config()$author, "/multiqc_data/"))
+            print(paste("Name der hochgeladenen Datei:", mq$name))
+            uploads_dir <- file.path(getwd(), "results/", config()$author, "/multiqc_data")
+            print(paste("Verzeichnis für upload files:", uploads_dir))
+            dir.create(uploads_dir, recursive = T)
+            destfile <- file.path(uploads_dir, mq$name)
+            multiqc_paths(paste0(getwd(), "/results/", config()$author, "/multiqc_data/"))
+            for (i in seq_along(mq$name)) {
+                print(destfile[i])
+                file.copy(mq$datapath[i], destfile[i], overwrite = TRUE)
+            }
+            message(paste0("### ", getwd(),
+                           "/results/", config()$author, "/multiqc_data/"))
         }
     })
 
@@ -673,7 +685,12 @@ server <- function(input, output, session) {
         if (files_ready() >= 2) TRUE
     })
 
+    output$config_status <- reactive({
+        config_valid()
+    })
     outputOptions(output, "file_ready", suspendWhenHidden = FALSE)
+    outputOptions(output, "config_status", suspendWhenHidden = FALSE)
+
 
     # Input regions control
     iv <- InputValidator$new()
@@ -723,12 +740,11 @@ server <- function(input, output, session) {
         }
     })
 
-
   # Create sia ----
   sia <- reactive({
-      createIa("/host/results/Geeven_sox/",  #destfile_paths()
+      createIa(destfile_paths(),  #destfile_paths()
                             config_path(), #'/host/Datasets/Geeven_sox/info.yaml',
-                  "/host/results/Geeven_sox/alignment/")}) # trackfile_paths()
+               trackfile_paths())}) # trackfile_paths()
 
     sia_ens <- eventReactive(input$run_ens, {
         consensusIa(sia(), model = input$rb_model)
@@ -880,9 +896,9 @@ server <- function(input, output, session) {
   output$basic_tab <- renderDataTable({
       sia_val <- sia()
       file.out <- paste0('fourSyerngy_basic4cseq_', sia_val@metadata$author)
-
-    files <- list.files("/host/results/Geeven_sox/basic4cseq/stats/",
-                        pattern = "*.txt", full.names = TRUE)
+      p <- basic_paths()
+    files <- list.files(basic_paths(),
+                        pattern = ".*stats.txt", full.names = TRUE)
     dfs <- lapply(files, read.delim, sep = ":", header = FALSE)
 
     # Finde die gemeinsamen Spalten
