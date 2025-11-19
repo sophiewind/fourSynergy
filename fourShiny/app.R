@@ -92,7 +92,8 @@ border-top-color:#666666;
                                p(
                                    style = "color: black;",
                                    "Config file not valid."
-                               )
+                               ),
+                               uiOutput("error_message_config")
                            )),
                 conditionalPanel(
                     condition = "output.config_status == 0",
@@ -437,38 +438,57 @@ server <- function(input, output, session) {
     files_ready <- reactiveVal(2)
     config_valid <- reactiveVal(0)# 0
 
+    # Erstelle eine reactiveValues-Variable, um den Fehler zu speichern
+    error_values <- reactiveValues(error_message = NULL)
+
     # Config check ----
     observe({
         req(input$config)
-            cg <- input$config
-            cg <- cg %>% mutate(dir = paste0(dirname(datapath), '/', name))
-            cat("config_valid vorher:", config_valid())
+        cg <- input$config
+        cg <- cg %>% mutate(dir = paste0(dirname(datapath), '/', name))
 
-                # Increment files_ready
-                isolate({
-                    files_ready(files_ready() + 1)
-                })
-                   if (check_info(cg$datapath)){
-                       message("Check ok")
-                      config_valid(1)
-                      cat("config_valid nachher:", config_valid())
+        # Increment files_ready
+        isolate({
+            files_ready(files_ready() + 1)
+        })
 
-                      # cat("config_valid vorher:", config_valid())
-                      config(read_yaml(cg$datapath))
-                   uploads_dir <- file.path(getwd(), paste0("/Datasets/", config()$author, "/"))
-                   dir.create(uploads_dir, recursive = T)
-                   print(paste("Verzeichnis für hochgeladene config:", uploads_dir))
-                   destfile <- file.path(uploads_dir, cg$name)
-                   config_path(destfile)
-                   file.copy(cg$datapath, destfile, overwrite = TRUE)
-               } else {
-                   message("Check failed")
+        tryCatch(
+            expr = {
+                if (check_info(cg$datapath)) {
+                    message("Check ok")
+                    config_valid(1)
+                    cat("config_valid nachher:", config_valid())
 
-                   config_valid(-1)
-               }
+                    # cat("config_valid vorher:", config_valid())
+                    config(read_yaml(cg$datapath))
+                    uploads_dir <- file.path(getwd(), paste0("/Datasets/", config()$author, "/"))
+                    dir.create(uploads_dir, recursive = T)
+                    print(paste("Verzeichnis für hochgeladene config:", uploads_dir))
+                    destfile <- file.path(uploads_dir, cg$name)
+                    config_path(destfile)
+                    file.copy(cg$datapath, destfile, overwrite = TRUE)
+                } else {
+                    message("Check failed")
+                    config_valid(-1)
+                }
+            },
+            error = function(e) {
+                config_valid(-1)
+                error_values$error_message <- e$message
+            }
+        )
+    })
+
+    # Erstelle ein textOutput, um den Fehler anzuzeigen
+    output$error_message_config <- renderUI({
+        req(error_values$error_message)
+
+        tagList(
+            tags$p(style = "color: red;",
+                   paste("Error:", error_values$error_message)),
+        )
 
     })
-#
 #     output$config_val <- renderText({
 #         as.character(config_valid())
 #     })
@@ -480,6 +500,7 @@ server <- function(input, output, session) {
     output$sia_info <- renderUI({
         req(input$shiny_in)
         sias <- input$shiny_in
+        sias <- sias[endsWith(sias$name, ".bed"),]
         sias <- sias %>% mutate(dir = paste0(dirname(datapath), '/', name))
         req_sias <- paste0(config()$author, "_", rep(c("foursig_1",
                                                "foursig_3",
@@ -513,7 +534,7 @@ server <- function(input, output, session) {
                 files_ready(files_ready() + 1)
             })
 
-        uploads_dir <- file.path(getwd(),  paste0("/Datasets/", config()$author, "/sia/"))
+        uploads_dir <- file.path(getwd(),  paste0("/results/", config()$author, "/sia/"))
         dir.create(uploads_dir, recursive = T)
         print(paste("Verzeichnis für hochgeladene Dateien:", uploads_dir))
 
@@ -523,10 +544,10 @@ server <- function(input, output, session) {
         destfile_paths(paste0(getwd(), "/results/", config()$author, "/"))
 
         for (i in seq_along(sias$name)) {
-            print(sias$datapath[i])
+            print(sias$name[i])
             if (endsWith(sias$name[i], 'nearbait_area.bed')){
-                file.copy(sias$datapath[i], gsub(pattern = 'sia', '',
-                                                 destfile[i]), overwrite = TRUE)
+                out <<- paste0(getwd(), paste0("/results/", config()$author, "/nearbait_area.bed"))
+                file.copy(sias$datapath[i], out, overwrite = TRUE)
                 print(gsub(pattern = 'sia', '', destfile[i]))
             } else {
                 file.copy(sias$datapath[i], destfile[i], overwrite = TRUE)
@@ -542,7 +563,8 @@ server <- function(input, output, session) {
 
         # Tracks in ####
         tp <- input$shiny_in
-        tp <<- tp %>% mutate(dir = paste0(dirname(datapath), '/', name))
+        tp <-  tp[grepl("\\.(bam|bai|bedGraph)$", tp$name), ]
+        tp <- tp %>% mutate(dir = paste0(dirname(datapath), '/', name))
 
         # Check if all files there
         if (!is.null(config()$control)){
@@ -573,13 +595,12 @@ server <- function(input, output, session) {
             })
 
 
-        print(paste("Name der hochgeladenen Datei:", tp$name))
         uploads_dir <- file.path(paste0(getwd(), "/results/", config()$author, "/alignment/"))
         dir.create(uploads_dir, recursive = T)
         print(paste("Verzeichnis für upload files:", uploads_dir))
         destfile <- file.path(uploads_dir, tp$name)
-        trackfile_paths(paste0(getwd(), "/results/", config()$author, "/"))
-        for (i in seq_along(tp$name)) {
+        trackfile_paths(paste0(getwd(), "/results/", config()$author, "/alignment/"))
+        for (i in seq_along(tp$name[endsWith(tp$name, "bam|bam.bai|bedgraph")])) {
             print(destfile[i])
             file.copy(tp$datapath[i], destfile[i], overwrite = TRUE)
         }
@@ -589,9 +610,11 @@ server <- function(input, output, session) {
 
     output$basic_info <- renderUI({
         req(input$shiny_in)
+        browser()
 
         # Tracks in ####
         bp <- input$shiny_in
+        bp <- bp[endsWith(bp$name, "_stats.txt"),]
         bp <- bp %>% mutate(dir = paste0(dirname(datapath), '/', name))
 
         # Check if all files there
@@ -625,10 +648,10 @@ server <- function(input, output, session) {
             uploads_dir <- file.path(paste0(getwd(), "/results/", config()$author, "/basic4cseq/stats/"))  # TODO add author to dirname
             dir.create(uploads_dir, recursive = T)
             print(paste("Verzeichnis für upload files:", uploads_dir))
-            destfile <- file.path(uploads_dir, tp$name)
+            destfile <- file.path(uploads_dir, bp$name)
             basic_paths(paste0(getwd(), "/results/", config()$author, "/basic4cseq/stats/"))
             # More elegan
-            for (i in seq_along(tp$name)) {
+            for (i in seq_along(bp$name[endsWith(bp$name, "stats.txt")])) {
                 print(destfile[i])
                 file.copy(bp$datapath[i], destfile[i], overwrite = TRUE)
             }
@@ -742,6 +765,9 @@ server <- function(input, output, session) {
 
   # Create sia ----
   sia <- reactive({
+      x <- destfile_paths()
+      y <- config_path()
+      z <- trackfile_paths()
       createIa(destfile_paths(),  #destfile_paths()
                             config_path(), #'/host/Datasets/Geeven_sox/info.yaml',
                trackfile_paths())}) # trackfile_paths()
@@ -853,7 +879,9 @@ server <- function(input, output, session) {
       geom_bar(stat = 'identity')
   })
 
-  output$seq_qual <- renderPlot({
+
+output$seq_qual <- renderPlot({
+      mc <- multiqc_paths()
     read.delim(paste0(multiqc_paths(), "fastqc_per_sequence_quality_scores_plot.txt")) %>%
       pivot_longer(cols = starts_with("X"), names_to = "time", values_to = "val") %>%
       mutate(
@@ -894,6 +922,7 @@ server <- function(input, output, session) {
   }, server = FALSE)
 
   output$basic_tab <- renderDataTable({
+      browser()
       sia_val <- sia()
       file.out <- paste0('fourSyerngy_basic4cseq_', sia_val@metadata$author)
       p <- basic_paths()
@@ -1049,8 +1078,13 @@ server <- function(input, output, session) {
     vfl <- sia_val@vfl
     for (i in seq(1, length(sia_val@expInteractions))){
       ov <- findOverlaps(vfl, sia_val@expInteractions[[i]])
-      mcols(vfl)[[sia_val@expInteractions[[i]]$tool[1]]] <- '-'
-      mcols(vfl[queryHits(ov),])[sia_val@expInteractions[[i]]$tool[1]] <- 'X'
+      if (!is.na(sia_val@expInteractions[[i]]$tool[1] )){
+          mcols(vfl)[[sia_val@expInteractions[[i]]$tool[1]]] <- '-'
+          mcols(vfl[queryHits(ov),])[sia_val@expInteractions[[i]]$tool[1]] <- 'X'
+      } else {
+          mcols(vfl)[[names(sia_val@expInteractions[i])]] <- '-'
+      }
+
     }
 
     vfl.df <- vfl %>% as.data.frame(keep.extra.columns = TRUE)# %>%
@@ -1082,8 +1116,12 @@ server <- function(input, output, session) {
     vfl <- sia_val@vfl
     for (i in seq(1, length(sia_val@ctrlInteractions))){
       ov <- findOverlaps(vfl, sia_val@ctrlInteractions[[i]])
-      mcols(vfl)[[sia_val@ctrlInteractions[[i]]$tool[1]]] <- '-'
-      mcols(vfl[queryHits(ov),])[sia_val@ctrlInteractions[[i]]$tool[1]] <- 'X'
+      if (!is.na(sia_val@ctrlInteractions[[i]]$tool[1] )){
+          mcols(vfl)[[sia_val@ctrlInteractions[[i]]$tool[1]]] <- '-'
+          mcols(vfl[queryHits(ov),])[sia_val@ctrlInteractions[[i]]$tool[1]] <- 'X'
+      } else {
+          mcols(vfl)[[names(sia_val@ctrlInteractions[i])]] <- '-'
+      }
     }
 
     vfl.df <- vfl %>% as.data.frame(keep.extra.columns = TRUE)
