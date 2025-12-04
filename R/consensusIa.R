@@ -67,7 +67,7 @@ consensusIa <- function(ia, model = "F1") {
             x
         }))
 
-        if (!is.null(ia@ctrlInteractions)) {
+        if (length(ia@ctrlInteractions) > 0) {
             ia_tmp_ctrl <- ia@ctrlInteractions
 
             # Add weights and rating to intervals
@@ -107,7 +107,7 @@ consensusIa <- function(ia, model = "F1") {
         }
 
         # Add rates to vfl if control is available
-        if (!is.null(ia@ctrlInteractions)) {
+        if (length(ia@ctrlInteractions) > 0) {
             for (i in seq_along(ia_tmp_ctrl)) {
                 ov <- findOverlaps(vfl, ia_tmp_ctrl[[i]])
                 name <- paste0("rate_", names(ia_tmp_ctrl[i]))
@@ -163,7 +163,7 @@ consensusIa <- function(ia, model = "F1") {
         }
 
         # control
-        if (!is.null(ia@ctrlInteractions)) {
+        if (length(ia@ctrlInteractions) > 0) {
             if (length(maj.ctrl) > 0 &&
                 sum(maj.ctrl$rate_total_control > greater.than) > 0) {
                 mcols(maj.ctrl[maj.ctrl$rate_total_control >

@@ -49,7 +49,7 @@ differentialAnalysis <- function(ia, fitType = "local") {
     } else if (length(ia@ctrlConsensus[ia@ctrlConsensus$significance > 0]) ==
         0) {
         stop(
-            "fourSynergy found no interactions in condition. A differential ",
+            "fourSynergy found no interactions in control. A differential ",
             "analysis is not possible"
         )
     } else {
@@ -62,7 +62,6 @@ differentialAnalysis <- function(ia, fitType = "local") {
             paste(ia@metadata$condition, ia@metadata$conditionRep, sep = "_"),
             paste(ia@metadata$control, ia@metadata$controlRep, sep = "_")
         )
-
 
         ## Create consensus peaks
         cond <- ia@expConsensus[which(ia@expConsensus$significance > 0), ]

@@ -32,3 +32,43 @@ readAndTag <- function(file_path, tag, org) {
         return(NULL)
     }
 }
+
+
+# string input
+# input_a <- "chr3:1000-4000"
+# input_b <- "chr3:1000-4000, chr2:1000-2000"
+#
+# input_b %>% stringr::str_split_1(', ') %>%
+#     as.data.frame() %>%
+#     separate('.', into = c("seqnames", "start", "end")) %>%
+#     makeGRangesListFromDataFrame()
+#
+# input_a %>% stringr::str_split_1(', ') %>%
+#     as.data.frame() %>%
+#     separate('.', into = c("seqnames", "start", "end")) %>%
+#     makeGRangesListFromDataFrame()
+#
+# # bed
+# x <- read.delim('./test.bed') %>%
+#     select(any_of(c('chr', 'seqnames', 'start', 'end')))
+# colnames(x) <- c('seqnames', 'start', 'end')
+#
+# x %>%
+#     makeGRangesListFromDataFrame()
+#
+#
+# bed_check <- function(bed){
+#     if (!file.exists(bed)){
+#         stop("The bed file '", bed, "' does not exist.", call. = FALSE)
+#     }
+#
+#     tryCatch({
+#         b.f <- read.delim(bed, header = FALSE)
+#         b.f <- b.f [,1:3]
+#         colnames(b.f) <- c('seqnames', 'start', 'end')
+#         b.f <- b.f %>%
+#             makeGRangesListFromDataFrame()
+#         return(bf)},
+#         stop('bed not formatted as expected.')
+#     )
+# }
