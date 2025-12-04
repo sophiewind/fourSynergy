@@ -46,8 +46,11 @@ createIa <- function(res_path = character(), config = list(), tracks = "") {
         r3c = c(2000, 5000, 10000), r4cker = c("nearbait")
     )
 
-    suffixes <- ifelse(!is.null(config$control),
-                       c("_condition", "_control"), '_condition')
+    if (is.null(config$control)) {
+        suffixes <- "_condition"
+    } else {
+        suffixes <- c("_condition", "_control")
+    }
 
     for (type in names(files_to_read)) {
         if (type == "r4cker") {
