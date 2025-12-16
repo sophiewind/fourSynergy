@@ -13,6 +13,7 @@
 #' @param cex.leg character expansion for legend.
 #' @param highlight_regions regions to highlight in the plot
 #' @param cex.y.lab character expansion for y labels.
+#' @param gene.name.cex character expansion for gene names.
 #'
 #' @return DESeq2 results of differential interaction calling.
 #'
@@ -34,7 +35,8 @@
 plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
                     cex.y.lab = 0.6, cex.ideo = 0.6, cex.y.track = 0.6,
                     cex.vp = 1, cex.leg = 0.6,
-                    plot_spider = FALSE, highlight_regions = NULL) {
+                    plot_spider = FALSE, highlight_regions = NULL,
+                    gene.name.cex = 1) {
     # Check input
     if (is.null(ia@differential)) {
         stop("Empty @differential slot. Did you run `differentialAnalysis()`?")
@@ -139,7 +141,7 @@ plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
 
     # Plot genes
     if (!is.null(genes_of_interest)) {
-        plot_genes(ia, kp, genes_of_interest)
+        plot_genes(ia, kp, genes_of_interest, gene.name.cex = gene.name.cex)
     }
 
     # Legend

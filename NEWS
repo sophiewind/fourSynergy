@@ -1,0 +1,4 @@
+0.99.1
+- Add plotBaseTracks and plotConsenusTracks for high resolution coverage plots
+- Add plotting params to karyoplot based visualizations
+- Add single condition mode

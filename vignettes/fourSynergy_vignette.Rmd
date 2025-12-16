@@ -134,7 +134,7 @@ the base tools and *fourSynergy* is written.
 After the pipeline is executed we can start with the analysis in R by
 loading the *fourSynergy* R package.
 
-```{r, echo=FALSE}
+```{r libs, echo=FALSE}
 library(fourSynergy)
 # library(tibble)
 ```
@@ -197,7 +197,7 @@ They can be visualized using `plotIaIndiviualTools()`. There is also the
 object to pass genes of interest, which are than shown in the karyoplot.
 
 ```{r, eval=TRUE}
-plotIaIndiviualTools(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
+plotIaIndiviualTools(sia, genes_of_interest = c("Ldlrad4", "Cep76"))
 ```
 Further, the base tool results can be visualized in higher resolution using
 `plotBaseTracks()`.

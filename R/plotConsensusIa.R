@@ -14,6 +14,7 @@
 #' @param cex.leg character expansion for legend.
 #' @param highlight_regions regions to highlight in the plot.
 #' @param plot_spider plotting connections from VP to interactions.
+#' @param gene.name.cex character expansion for gene names.
 #'
 #' @return karyoplot with calling results.
 #'
@@ -34,7 +35,8 @@
 plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
                             cex.chr = 1, cex.ideo = 0.6, cex.y.lab = 0.6,
                             cex.y.track = 0.6, cex.vp = 1, cex.leg = 0.6,
-                            highlight_regions = NULL, plot_spider = FALSE) {
+                            highlight_regions = NULL, plot_spider = FALSE,
+                            gene.name.cex = 1) {
     TxDb <- switch(ia@metadata$organism,
                 "mm10" = TxDb.Mmusculus.UCSC.mm10.knownGene,
                 "hg19" = TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -114,7 +116,8 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
 
     # Genes
     if (!is.null(genes_of_interest)) {
-        plot_genes(ia, kp, genes_of_interest, TxDb)
+        plot_genes(ia, kp, genes_of_interest, TxDb,
+                   gene.name.cex = gene.name.cex)
     }
 
     # VP

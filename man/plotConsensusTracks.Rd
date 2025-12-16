@@ -4,10 +4,10 @@
 \alias{plotConsensusTracks}
 \title{plotConsensusTracks}
 \usage{
-plotConsensusTracks(sia, highlight_regions = NULL, max_range = 3000)
+plotConsensusTracks(ia, highlight_regions = NULL, max_range = 3000)
 }
 \arguments{
-\item{sia}{fourSynergy object with interactions from all base tools}
+\item{ia}{fourSynergy object with interactions from all base tools}
 
 \item{highlight_regions}{regions to highlight in the plot}
 

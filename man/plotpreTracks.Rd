@@ -4,10 +4,10 @@
 \alias{plotpreTracks}
 \title{plotpreTracks}
 \usage{
-plotpreTracks(sia, highlight_regions = NULL)
+plotpreTracks(ia, highlight_regions = NULL)
 }
 \arguments{
-\item{sia}{fourSynergy object with interactions from all base tools.}
+\item{ia}{fourSynergy object with interactions from all base tools.}
 
 \item{highlight_regions}{regions to highlight in the plot.}
 }

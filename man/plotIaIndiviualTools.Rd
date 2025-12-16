@@ -14,7 +14,8 @@ plotIaIndiviualTools(
   cex.y.lab = 0.6,
   cex.vp = 1,
   cex.leg = 0.6,
-  highlight_regions = NULL
+  highlight_regions = NULL,
+  gene.name.cex = 1
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ plotIaIndiviualTools(
 \item{cex.leg}{character expansion for legend.}
 
 \item{highlight_regions}{regions to highlight in the plot}
+
+\item{gene.name.cex}{character expansion for gene names.}
 }
 \value{
 karyoplot with calling results.

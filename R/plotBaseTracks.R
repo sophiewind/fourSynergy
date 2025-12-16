@@ -1,6 +1,6 @@
 #' plotBaseTracks
 #'
-#' @param sia fourSynergy object with interactions from all base tools
+#' @param ia fourSynergy object with interactions from all base tools
 #' @param highlight_regions regions to highlight in the plot
 #' @param max_range maximum plotting range
 #'
@@ -19,18 +19,18 @@
 #' )
 #' sia <- createIa(res_path = res_path, config = config, tracks = tracks)
 #' plotBaseTracks(sia)
-plotBaseTracks <- function(sia, highlight_regions = NULL, max_range = 3000) {
-    if (is.null(sia) || !(is(sia, "fourSynergy"))){
+plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
+    if (is.null(ia) || !(is(ia, "fourSynergy"))){
         stop("Object is not a fourSynergy object or not provided.")
     }
-    res <- plotpreTracks(sia, highlight_regions)
+    res <- plotpreTracks(ia, highlight_regions)
     if(is.null(res$tmp)){
         stop("res does not containt tmp. Check plotpreTracks")
     }
     p.col <- c("rep.r3c_2000" = "#fdae61", "rep.r4cker_nearbait" = "#228B22",
             "rep.peakc_21" = "#9c0142", "rep.foursig_1" = "#3288bd")
 
-    if (!is.null(sia@metadata$control)){
+    if (!is.null(ia@metadata$control)){
         tools <- paste0('rep.', rep(c('peakc_21', 'foursig_1', 'r3c_2000',
                              'r4cker_nearbait'), each = 2),
                c('.condition', '.control'))
@@ -40,9 +40,9 @@ plotBaseTracks <- function(sia, highlight_regions = NULL, max_range = 3000) {
     }
     for (p in tools) {
         if (endsWith(p, 'condition')) {
-            ia <- sia@expInteractions[[p]]
+            ia <- ia@expInteractions[[p]]
         } else {
-            try(ia <- sia@ctrlInteractions[[p]])
+            try(ia <- ia@ctrlInteractions[[p]])
         }
 
         ov <- findOverlaps(res$tmp, ia)
@@ -80,11 +80,11 @@ plotBaseTracks <- function(sia, highlight_regions = NULL, max_range = 3000) {
             theme(panel.background = element_blank(),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank()) +
-            geom_vline(aes(xintercept = start(sia@vp)), linetype = 'dashed')
+            geom_vline(aes(xintercept = start(ia@vp)), linetype = 'dashed')
         return(p)
     }
     p.cond <- create_plot(tmp.df, "condition", "mean_cond")
-    if(!is.null(sia@metadata$control)){
+    if(!is.null(ia@metadata$control)){
         p.ctrl <- create_plot(tmp.df, "control", "mean_ctrl")
     } else {
         p.ctrl <- NULL

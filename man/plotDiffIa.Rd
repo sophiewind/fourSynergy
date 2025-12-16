@@ -14,7 +14,8 @@ plotDiffIa(
   cex.vp = 1,
   cex.leg = 0.6,
   plot_spider = FALSE,
-  highlight_regions = NULL
+  highlight_regions = NULL,
+  gene.name.cex = 1
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ plotDiffIa(
 \item{plot_spider}{plotting connections from VP to interactions}
 
 \item{highlight_regions}{regions to highlight in the plot}
+
+\item{gene.name.cex}{character expansion for gene names.}
 }
 \value{
 DESeq2 results of differential interaction calling.

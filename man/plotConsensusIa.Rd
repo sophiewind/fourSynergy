@@ -14,7 +14,8 @@ plotConsensusIa(
   cex.vp = 1,
   cex.leg = 0.6,
   highlight_regions = NULL,
-  plot_spider = FALSE
+  plot_spider = FALSE,
+  gene.name.cex = 1
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ plotConsensusIa(
 \item{highlight_regions}{regions to highlight in the plot.}
 
 \item{plot_spider}{plotting connections from VP to interactions.}
+
+\item{gene.name.cex}{character expansion for gene names.}
 }
 \value{
 karyoplot with calling results.

@@ -1,6 +1,6 @@
 #' plotConsensusTracks
 #'
-#' @param sia fourSynergy object with interactions from all base tools
+#' @param ia fourSynergy object with interactions from all base tools
 #' @param highlight_regions regions to highlight in the plot
 #' @param max_range maximum plotting range
 #'
@@ -20,23 +20,23 @@
 #' sia <- createIa(res_path = res_path, config = config, tracks = tracks)
 #' sia <- consensusIa(sia, model = "AUPRC")
 #' plotConsensusTracks(sia)
-plotConsensusTracks <- function(sia, highlight_regions = NULL,
+plotConsensusTracks <- function(ia, highlight_regions = NULL,
                                 max_range = 3000) {
-    if(is.null(sia) || !(is(sia, "fourSynergy"))){
+    if(is.null(ia) || !(is(ia, "fourSynergy"))){
         stop("Object is not a fourSynergy object or not provided.")
     }
-    if (length(sia@expConsensus) == 0) {
+    if (length(ia@expConsensus) == 0) {
         stop("fourSynergy found no interactions in condition. Did you run",
             " `consensusIa()`?"
         )
     }
-    res <- plotpreTracks(sia, highlight_regions)
+    res <- plotpreTracks(, highlight_regions)
     if(is.null(res$tmp)){
         stop("res does not containt tmp. Check plotpreTracks")
     }
     tmp <- res$tmp
-    tmp$ens_cond <- sia@expConsensus$significance
-    try(tmp$ens_ctrl <- sia@ctrlConsensus$significance)
+    tmp$ens_cond <- @expConsensus$significance
+    try(tmp$ens_ctrl <- @ctrlConsensus$significance)
     tmp.df <- as.data.frame(tmp)
 
     create_plot_ens <- function(df, mean_col, ens_col){
@@ -67,11 +67,11 @@ plotConsensusTracks <- function(sia, highlight_regions = NULL,
             theme(panel.background = element_blank(),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank()) +
-            geom_vline(aes(xintercept = start(sia@vp)), linetype = 'dashed')
+            geom_vline(aes(xintercept = start(@vp)), linetype = 'dashed')
     }
     p.cond <- create_plot_ens(tmp.df, "mean_cond", "ens_cond")
 
-    if (!is.null(sia@metadata$control)){
+    if (!is.null(@metadata$control)){
         p.ctrl <- create_plot_ens(tmp.df, "mean_ctrl", "ens_ctrl")
     } else {
         p.ctrl <- NULL

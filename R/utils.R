@@ -37,14 +37,14 @@ readAndTag <- function(file_path, tag, org) {
 
 #' plotpreTracks
 #'
-#' @param sia fourSynergy object with interactions from all base tools.
+#' @param ia fourSynergy object with interactions from all base tools.
 #' @param highlight_regions regions to highlight in the plot.
 #'
 #' @returns list with read counts and Granges of bedfiles
 #' @keywords internal
-plotpreTracks <- function(sia, highlight_regions = NULL) {
-    bgs <- readBedGraph(sia)
-    tmp <- sia@vfl
+plotpreTracks <- function(ia, highlight_regions = NULL) {
+    bgs <- readBedGraph(ia)
+    tmp <- ia@vfl
 
     # Collect reads
     collect <- list()
@@ -58,13 +58,13 @@ plotpreTracks <- function(sia, highlight_regions = NULL) {
 
     # Average reads
     cond.reads <- coll.df %>%
-        dplyr::select(., matches(sia@metadata$condition)) %>%
+        dplyr::select(., matches(ia@metadata$condition)) %>%
         mutate(mean_cond = rowMeans(.)) %>%
         dplyr::select(mean_cond)
     tmp$cond_reads <- cond.reads
-    if(!is.null(sia@metadata$control)){
+    if(!is.null(ia@metadata$control)){
         ctrl.reads <- coll.df %>%
-            dplyr::select(., matches(sia@metadata$control)) %>%
+            dplyr::select(., matches(ia@metadata$control)) %>%
             mutate(mean_ctrl = rowMeans(.)) %>%
             dplyr::select(mean_ctrl)
         tmp$ctrl_reads <- ctrl.reads
