@@ -30,13 +30,13 @@ plotConsensusTracks <- function(ia, highlight_regions = NULL,
             " `consensusIa()`?"
         )
     }
-    res <- plotpreTracks(, highlight_regions)
+    res <- plotpreTracks(ia, highlight_regions)
     if(is.null(res$tmp)){
         stop("res does not containt tmp. Check plotpreTracks")
     }
     tmp <- res$tmp
-    tmp$ens_cond <- @expConsensus$significance
-    try(tmp$ens_ctrl <- @ctrlConsensus$significance)
+    tmp$ens_cond <- ia@expConsensus$significance
+    try(tmp$ens_ctrl <- ia@ctrlConsensus$significance)
     tmp.df <- as.data.frame(tmp)
 
     create_plot_ens <- function(df, mean_col, ens_col){
@@ -67,11 +67,11 @@ plotConsensusTracks <- function(ia, highlight_regions = NULL,
             theme(panel.background = element_blank(),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank()) +
-            geom_vline(aes(xintercept = start(@vp)), linetype = 'dashed')
+            geom_vline(aes(xintercept = start(ia@vp)), linetype = 'dashed')
     }
     p.cond <- create_plot_ens(tmp.df, "mean_cond", "ens_cond")
 
-    if (!is.null(@metadata$control)){
+    if (!is.null(ia@metadata$control)){
         p.ctrl <- create_plot_ens(tmp.df, "mean_ctrl", "ens_ctrl")
     } else {
         p.ctrl <- NULL

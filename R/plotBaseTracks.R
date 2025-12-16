@@ -40,14 +40,14 @@ plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
     }
     for (p in tools) {
         if (endsWith(p, 'condition')) {
-            ia <- ia@expInteractions[[p]]
+            inter <- ia@expInteractions[[p]]
         } else {
-            try(ia <- ia@ctrlInteractions[[p]])
+            try(inter <- ia@ctrlInteractions[[p]])
         }
 
-        ov <- findOverlaps(res$tmp, ia)
+        ov <- findOverlaps(res$tmp, inter)
         mcols(res$tmp)[[p]] <- 0
-        mcols(res$tmp[queryHits(ov)])[[p]] <- ia[subjectHits(ov)]$significance
+        mcols(res$tmp[queryHits(ov)])[[p]] <- inter[subjectHits(ov)]$significance
     }
     tmp.df <- as.data.frame(res$tmp)
     create_plot <- function(df, treat, mean_col) {
