@@ -9,8 +9,10 @@ plotConsensusIa(
   genes_of_interest = NULL,
   cex.chr = 1,
   cex.ideo = 0.6,
+  cex.y.lab = 0.6,
   cex.y.track = 0.6,
   cex.vp = 1,
+  cex.leg = 0.6,
   highlight_regions = NULL,
   plot_spider = FALSE
 )
@@ -25,13 +27,17 @@ plotConsensusIa(
 
 \item{cex.ideo}{character expansion base numbers of ideogram.}
 
+\item{cex.y.lab}{character expansion for y labels.}
+
 \item{cex.y.track}{character expansion y axis track.}
 
 \item{cex.vp}{character expansion viewpoint label.}
 
-\item{highlight_regions}{regions to highlight in the plot}
+\item{cex.leg}{character expansion for legend.}
 
-\item{plot_spider}{plotting connections from VP to interactions}
+\item{highlight_regions}{regions to highlight in the plot.}
+
+\item{plot_spider}{plotting connections from VP to interactions.}
 }
 \value{
 karyoplot with calling results.

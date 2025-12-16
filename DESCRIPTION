@@ -29,17 +29,19 @@ Imports:
     jsonlite,
     karyoploteR,
     TxDb.Mmusculus.UCSC.mm10.knownGene,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
     bamsignals,
     DESeq2,
     GenomeInfoDb,
-    graphics
+    graphics,
+    stringr,
+    yaml
 VignetteBuilder: knitr
 Suggests: 
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    BiocStyle,
-    yaml
+    BiocStyle
 biocViews: Sequencing, Software, DifferentialPeakCalling
 BugReports: https://github.com/sophiewind/TODO/issues
 URL: https://github.com/sophiewind/TODO

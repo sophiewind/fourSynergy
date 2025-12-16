@@ -52,6 +52,7 @@ setMethod(
     }
 )
 
+
 setGeneric("plotDiffIa", function(ia) {
     standardGeneric("plotDiffIa")
 })
@@ -78,3 +79,18 @@ setGeneric("plotIaIndiviualTools", function(ia = GRangesList(),
                                             genes_of_interest = NULL) {
     standardGeneric("plotIaIndiviualTools")
 })
+
+setGeneric("plotBaseTracks", function(sia = GRangesList(),
+                                      highlight_regions = NULL) {
+    standardGeneric("plotBaseTracks")
+})
+
+setGeneric("plotConsensusTracks", function(sia = GRangesList(),
+                                           highlight_regions = NULL) {
+    standardGeneric("plotConsensusTracks")
+})
+
+setGeneric("checkConfig", function(config = character()) {
+    standardGeneric("checkConfig")
+})
+

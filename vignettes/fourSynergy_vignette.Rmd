@@ -199,6 +199,12 @@ object to pass genes of interest, which are than shown in the karyoplot.
 ```{r, eval=TRUE}
 plotIaIndiviualTools(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
 ```
+Further, the base tool results can be visualized in higher resolution using
+`plotBaseTracks()`.
+
+```{r, eval=TRUE}
+plotBaseTracks(sia)
+```
 
 ## Ensemble results
 
@@ -213,6 +219,13 @@ The ensemble results can than be visualized.
 
 ```{r}
 plotConsensusIa(ia = sia)
+```
+
+The consensus results can be visualized in higher resolution using
+`plotConsensusTracks()`.
+
+```{r, eval=TRUE}
+plotConsensusTracks(sia)
 ```
 
 ## Differential interaction analysis

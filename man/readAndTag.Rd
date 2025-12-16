@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{readAndTag}
 \alias{readAndTag}
-\title{Internal function to read base tools solutions in FourSynergy format.}
+\title{readAndTag}
 \usage{
 readAndTag(file_path, tag, org)
 }

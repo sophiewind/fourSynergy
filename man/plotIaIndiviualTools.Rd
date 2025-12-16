@@ -6,13 +6,14 @@
 individual tools.}
 \usage{
 plotIaIndiviualTools(
-  ia = GRangesList(),
+  ia,
   genes_of_interest = NULL,
   cex.chr = 1,
   cex.ideo = 0.6,
   cex.y.track = 0.6,
   cex.y.lab = 0.6,
   cex.vp = 1,
+  cex.leg = 0.6,
   highlight_regions = NULL
 )
 }
@@ -31,6 +32,8 @@ plotIaIndiviualTools(
 \item{cex.y.lab}{character expansion y lab.}
 
 \item{cex.vp}{character expansion viewpoint label.}
+
+\item{cex.leg}{character expansion for legend.}
 
 \item{highlight_regions}{regions to highlight in the plot}
 }

@@ -14,6 +14,7 @@ tracks <- system.file("extdata", "results", "Demo", "alignment",
     package = "fourSynergy"
 )
 sia <- createIa(res_path = res_path, config = config, tracks = tracks)
+
 # createIa ---------------------------------------------------------------------
 test_that("createIa inserts metadata in the right way.", {
     expect_equal(sia@metadata, read_yaml(system.file("extdata", "Datasets",
@@ -66,7 +67,7 @@ test_that("createIa inserts significance in the right way.", {
     expect_equal(
         sum(sia@expInteractions$rep.peakc_11.condition$significance),
         45
-    ) # TODO adjust path
+    )
 })
 
 test_that("createIa handles wrong input", {
@@ -213,3 +214,58 @@ test_that("plotDifferentialIa creates a plot.", {
 #             expect_warning(plotDiffIa(sia_no_diff),
 #             "No significant differential interaction were found")
 #           })
+
+test_that("plotBaseTracks stops when regions are invalid,",{
+    expect_warning(plotBaseTracks(sia, highlight_regions = c('x')),
+                   "The regions have to be either provided as string with following pattern: 'chr3:33000000-34000000' or as comma separated string (chr3:33000000-34000000, chr3:35000000-35500000) or as valid .bed file.",
+                   fixed = TRUE)
+})
+
+test_that("plotBaseTracks stops when sia is not an fourSynergy object.",{
+    expect_error(plotConsensusTracks(mtcars),
+                 "Object is not a fourSynergy object or not provided.")
+})
+
+test_that("plotConsensusTracks stops when regions are invalid,",{
+    expect_warning(plotConsensusTracks(sia, highlight_regions = c('x')),
+                   "The regions have to be either provided as string with following pattern: 'chr3:33000000-34000000' or as comma separated string (chr3:33000000-34000000, chr3:35000000-35500000) or as valid .bed file.",
+                   fixed = TRUE)
+})
+
+test_that("plotConsensusTracks stops when sia is not an fourSynergy object.",{
+    expect_error(plotConsensusTracks(mtcars),
+                 "Object is not a fourSynergy object or not provided.")
+})
+
+test_that("plotpreTracks stops when regions are invalid,",{
+    expect_warning(plotpreTracks(sia, 'x'),
+                   "The regions have to be either provided as string with following pattern: 'chr3:33000000-34000000' or as comma separated string (chr3:33000000-34000000, chr3:35000000-35500000) or as valid .bed file.",
+                   fixed = TRUE)
+})
+
+test_that('Reads are correctly mappen onto vfl by plotpreTracks.', {
+    expect_equal(ranges(sia@vfl), ranges(plotpreTracks(sia)$tmp))
+})
+
+test_that("plotpreTracks requires valid @vfl slot to produce tmp results.",{
+    fake_sia <- sia
+    fake_sia@vfl <- GenomicRanges::GRanges()
+    expect_error(
+        plotpreTracks(fake_sia)
+    )
+})
+test_that("plotBaseTracks recognizes single condition-mode", {
+    sia_tmp <- sia
+    sia_tmp@metadata$control <- NULL
+    sia_tmp@metadata$controlRep <- NULL
+    p <- plotBaseTracks(sia_tmp)
+    expect_null(p[[2]])
+})
+
+test_that("plotConsensusTracks recognizes single condition-mode", {
+    sia_tmp <- sia
+    sia_tmp@metadata$control <- NULL
+    sia_tmp@metadata$controlRep <- NULL
+    p <- plotConsensusTracks(sia_tmp)
+    expect_null(p[[2]])
+})

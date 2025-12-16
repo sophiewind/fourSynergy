@@ -2,9 +2,12 @@
 % Please edit documentation in R/AllGenerics.R
 \name{setDds}
 \alias{setDds}
+\alias{setDds,fourSynergy-method}
 \title{Set dds attribute}
 \usage{
 setDds(object, value)
+
+\S4method{setDds}{fourSynergy}(object, value)
 }
 \arguments{
 \item{object}{fourSynergy object with interactions from all base tools.}

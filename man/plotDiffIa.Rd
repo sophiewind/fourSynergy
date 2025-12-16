@@ -8,9 +8,11 @@ plotDiffIa(
   ia,
   genes_of_interest = NULL,
   cex.chr = 1,
+  cex.y.lab = 0.6,
   cex.ideo = 0.6,
   cex.y.track = 0.6,
   cex.vp = 1,
+  cex.leg = 0.6,
   plot_spider = FALSE,
   highlight_regions = NULL
 )
@@ -23,11 +25,15 @@ plotDiffIa(
 
 \item{cex.chr}{character expansion of chromosome label.}
 
+\item{cex.y.lab}{character expansion for y labels.}
+
 \item{cex.ideo}{character expansion base numbers of ideogram.}
 
 \item{cex.y.track}{character expansion y axis track.}
 
 \item{cex.vp}{character expansion viewpoint label.}
+
+\item{cex.leg}{character expansion for legend.}
 
 \item{plot_spider}{plotting connections from VP to interactions}
 
