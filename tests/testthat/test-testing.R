@@ -137,26 +137,9 @@ test_that("consensusIa assigns right weights (condition).", {
     )
 })
 
-# test_that("consenusIa assigns right weights (control)", {
-#   target_range <- GRanges("chr1", IRanges(10000, 10500))
-#   overlapping_consensus <- sia@ctrlConsensus %over% target_range
-#
-#   expect_equal(
-#     mcols(overlapping_consensus)$rate_rep.peakc_21.control,
-#     0
-#   )
-# })
-
 test_that("Warnings is raised if no genes of interest are available.", {
     expect_warning(
         plotIaIndiviualTools(sia, "TP53"),
-        "Genes of interest not found in the nearbait area."
-    )
-})
-
-test_that("Warnings is raised if no genes of interest are available.", {
-    expect_warning(
-        plotConsensusIa(sia, "TP53"),
         "Genes of interest not found in the nearbait area."
     )
 })
@@ -166,7 +149,7 @@ sia_tmp <- sia
 sia_tmp@expConsensus <- GRanges()
 test_that("Warnings is raised if no genes of interest are available.", {
     expect_warning(
-        plotConsensusIa(sia_tmp, "TP53"),
+        plotConsensusIa(sia_tmp),
         "fourSynergy found no interactions in condition. Did you run",
         "`consensusIa()`?"
     )

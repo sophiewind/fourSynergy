@@ -28,7 +28,7 @@
 #'     package = "fourSynergy"
 #' )
 #' sia <- createIa(res_path = res_path, config = config, tracks = tracks)
-#' plotIaIndiviualTools(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
+#' plotIaIndiviualTools(ia = sia)
 plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
                                  cex.chr = 1, cex.ideo = 0.6, cex.y.track = 0.6,
                                  cex.y.lab = 0.6, cex.vp = 1, cex.leg = 0.6,

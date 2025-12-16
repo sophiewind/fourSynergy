@@ -59,5 +59,5 @@ tracks <- system.file("extdata", "results", "Demo", "alignment",
     package = "fourSynergy"
 )
 sia <- createIa(res_path = res_path, config = config, tracks = tracks)
-plotIaIndiviualTools(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
+plotIaIndiviualTools(ia = sia)
 }
