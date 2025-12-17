@@ -4,18 +4,12 @@
 #' @param value DESeqResults-object.
 #'
 #' @return Modified fourSynergy-object
-#' @export
+#' @keywords internal
 setGeneric("setDifferential", function(object, value) {
     standardGeneric("setDifferential")
 })
 
-#' Set differential attribute
-#'
-#' @param object fourSynergy object with interactions from all base tools.
-#' @param value DESeqResults-object
-#'
-#' @return Modified fourSynergy-object
-#' @export
+#' @rdname setDifferential
 setMethod(
     "setDifferential", signature(object = "fourSynergy"),
     function(object, value) {
@@ -34,7 +28,7 @@ setMethod(
 #' @param value DESeqDataSet-object.
 #'
 #' @return Modified fourSynergy-object
-#' @export
+#' @keywords internal
 setGeneric("setDds", function(object, value) {
     standardGeneric("setDds")
 })
@@ -81,12 +75,12 @@ setGeneric("plotIaIndiviualTools", function(ia = GRangesList(),
 })
 
 setGeneric("plotBaseTracks", function(sia = GRangesList(),
-                                      highlight_regions = NULL) {
+                                    highlight_regions = NULL) {
     standardGeneric("plotBaseTracks")
 })
 
 setGeneric("plotConsensusTracks", function(sia = GRangesList(),
-                                           highlight_regions = NULL) {
+                                        highlight_regions = NULL) {
     standardGeneric("plotConsensusTracks")
 })
 

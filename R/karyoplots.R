@@ -137,7 +137,7 @@ plotTracks <- function(ia, kp, bgs, r0 = 0, r1 = 1, cex.vp = 1,
 #' @return karyoplot layer with genes
 #' @noRd
 plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2",
-                       gene.name.cex = 1) {
+                        gene.name.cex = 1) {
     TxDb <- switch(ia@metadata$organism,
                 "mm10" = TxDb.Mmusculus.UCSC.mm10.knownGene,
                 "hg19" = TxDb.Hsapiens.UCSC.hg19.knownGene)

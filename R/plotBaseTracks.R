@@ -32,11 +32,11 @@ plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
 
     if (!is.null(ia@metadata$control)){
         tools <- paste0('rep.', rep(c('peakc_21', 'foursig_1', 'r3c_2000',
-                             'r4cker_nearbait'), each = 2),
-               c('.condition', '.control'))
+                        'r4cker_nearbait'), each = 2),
+                c('.condition', '.control'))
     } else {
         tools <- paste0('rep.', rep(c('peakc_21', 'foursig_1', 'r3c_2000',
-                                      'r4cker_nearbait')), '.condition')
+                                        'r4cker_nearbait')), '.condition')
     }
     for (p in tools) {
         if (endsWith(p, 'condition')) {
@@ -47,7 +47,8 @@ plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
 
         ov <- findOverlaps(res$tmp, inter)
         mcols(res$tmp)[[p]] <- 0
-        mcols(res$tmp[queryHits(ov)])[[p]] <- inter[subjectHits(ov)]$significance
+        mcols(res$tmp[queryHits(ov)])[[p]] <-
+            inter[subjectHits(ov)]$significance
     }
     tmp.df <- as.data.frame(res$tmp)
     create_plot <- function(df, treat, mean_col) {

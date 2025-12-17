@@ -62,7 +62,7 @@ We recommend the pipeline to be executed in a docker.
 
 *fourSynergy* can be installed as follows:
 
-```{r, eval=FALSE}
+```{r install, eval=FALSE}
 BiocManager::install("fourSynergy")
 ```
 
@@ -85,7 +85,7 @@ Before starting the R analysis you have to run the fourSynergy snakemake
 pipeline, which is available at (will be added soon) and can be executed
 using:
 
-```{bash, eval=FALSE}
+```{bash snakemake, eval=FALSE}
 snakemake \
     -s Snakefile_dyn \
     --cores 30 \
@@ -101,6 +101,8 @@ Input for the fourSynergy pipeline are...
 
 -   config.yaml
 
+-   Reference genome
+
 #### config
 
 The config file is crucial to run *fourSynergy*. All relevant
@@ -109,10 +111,10 @@ info.yaml in `inst/extdata/Datasets/Demo/info.yaml`.
 
 ### Output
 
-The pipeline creates an results directory in the directory were its
+The pipeline creates a results directory in the directory were its
 executed. In the results directory is a directory called like the
-`author` provided in the config file. In this directory all results of
-the base tools and *fourSynergy* is written.
+`author` provided in the config file. In this directory, all results of
+the base tools and *fourSynergy* are written.
 
 ```         
 ├── Datasets
@@ -134,9 +136,8 @@ the base tools and *fourSynergy* is written.
 After the pipeline is executed we can start with the analysis in R by
 loading the *fourSynergy* R package.
 
-```{r libs, echo=FALSE}
+```{r libs, message=FALSE}
 library(fourSynergy)
-# library(tibble)
 ```
 
 ## Load data
@@ -189,20 +190,20 @@ in condition and in control as well as metadata.
 The base tool results are stored in the fourSynergy object in the slots
 `expInteractions` and `ctrlInteractions`.
 
-```{r, eval=TRUE}
+```{r slots, eval=TRUE}
 slotNames(sia)
 ```
 
 They can be visualized using `plotIaIndiviualTools()`. There is also the
 object to pass genes of interest, which are than shown in the karyoplot.
 
-```{r, eval=TRUE}
+```{r plot_ia, message=FALSE, eval=TRUE}
 plotIaIndiviualTools(sia, genes_of_interest = c("Ldlrad4", "Cep76"))
 ```
 Further, the base tool results can be visualized in higher resolution using
 `plotBaseTracks()`.
 
-```{r, eval=TRUE}
+```{r plot_tracks_base, message=FALSE, eval=TRUE}
 plotBaseTracks(sia)
 ```
 
@@ -211,20 +212,20 @@ plotBaseTracks(sia)
 To perform ensemble calling you need to specify if you want to use the
 F1 or the AUPRC model.
 
-```{r}
+```{r ens}
 sia <- consensusIa(sia, model = "AUPRC")
 ```
 
 The ensemble results can than be visualized.
 
-```{r}
+```{r plot_ens}
 plotConsensusIa(ia = sia)
 ```
 
 The consensus results can be visualized in higher resolution using
 `plotConsensusTracks()`.
 
-```{r, eval=TRUE}
+```{r plot_ens_tracks, message=FALSE, eval=TRUE}
 plotConsensusTracks(sia)
 ```
 
@@ -239,7 +240,7 @@ using a negative binomial distribution. In the example dataset the
 *(The plots do not look representative here because the BAM file size
 has been drastically reduced for this example.)*
 
-```{r}
+```{r diff}
 sia <- differentialAnalysis(ia = sia, fitType = "mean")
 ```
 
@@ -247,11 +248,11 @@ The results of the differential analysis are stored in the
 `@differential` slot of the `sia` object and can be visualized using
 `plotDiffIa()`.
 
-```{r diffplot}
+```{r diffplot, message=FALSE}
 plotDiffIa(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
 ```
 
 
-```{r}
+```{r session}
 sessionInfo()
 ```

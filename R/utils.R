@@ -118,7 +118,8 @@ checkConfig <- function(config) {
     }
     pattern <- "^[A-Za-z0-9_ \\+\\-]+$"
     config <- read_yaml(config, fileEncoding = "UTF-8")
-    if (is.null(config$author) || !(is.character(config$author)) || !(grepl(pattern, config$author))) {
+    if (is.null(config$author) || !(is.character(config$author)) ||
+        !(grepl(pattern, config$author))) {
         stop("Author is missing or has an incorrect format.")
     }
     organism <- tolower(config$organism)
@@ -138,7 +139,7 @@ checkConfig <- function(config) {
         if (!is.list(reps) && !is.vector(reps) || length(reps) < 2) {
             return(FALSE)
         }
-        if (!all(sapply(reps, is.numeric))) {
+        if (!all(vapply(reps, is.numeric, logical(1L)))) {
             return(FALSE)
         }
         return(TRUE)
@@ -150,8 +151,10 @@ checkConfig <- function(config) {
         warning("controlRep is missing or has an incorrect format.")
     }
     if (!is.null(config$condition)) {
-        if (is.null(config$conditionRep) || !(check_reps(config$conditionRep))) {
-            stop("condition is provided, but conditionRep is missing or has an incorrect format.")
+        if (is.null(config$conditionRep) ||
+            !(check_reps(config$conditionRep))) {
+            stop("condition is provided, but conditionRep is missing or has ",
+            "an incorrect format.")
         }
     }
     if (is.null(config$readLength) || !(is.numeric(config$readLength))) {
@@ -160,17 +163,22 @@ checkConfig <- function(config) {
     primer_f <- config$PrimerF
     primer_r <- config$PrimerR
     pattern <- "^[GATCatgc]+$"
-    if (is.null(primer_f) || !(grepl(pattern, primer_f)) || is.null(primer_r) || !(grepl(pattern, primer_r))) {
+    if (is.null(primer_f) || !(grepl(pattern, primer_f)) || is.null(primer_r) ||
+        !(grepl(pattern, primer_r))) {
         stop("One or both primer are missing or have an incorrect format.")
     }
-    if (is.null(config$REEnz) || !(is.list(config$REEnz)) && !(is.vector(config$REEnz))) {
+    if (is.null(config$REEnz) || !(is.list(config$REEnz)) &&
+        !(is.vector(config$REEnz))) {
         stop("REEnz is missing or not a list.")
     }
-    if (!all(sapply(config$REEnz, is.character))) {
+    if (!all(vapply(config$REEnz, is.character, logical(1L)))) {
         stop("REEnz must be a list where all entries are strings.")
     }
-    if (!is.null(config$RESeq) && (is.list(config$RESeq) || is.vector(config$RESeq))) {
-        is_valid_seq <- all(sapply(config$RESeq, function(seq) grepl("^[GATCatgc]+$", seq)))
+    if (!is.null(config$RESeq) && (is.list(config$RESeq) ||
+                                    is.vector(config$RESeq))) {
+        is_valid_seq <- all(vapply(config$RESeq,
+                                function(seq) grepl("^[GATCatgc]+$", seq),
+                                logical(1L)))
         if (!(is_valid_seq)) {
             stop("RESeq contains invalid symbols")
         }
@@ -179,45 +187,3 @@ checkConfig <- function(config) {
     }
     return(TRUE)
 }
-
-
-
-
-# string input
-# input_a <- "chr3:1000-4000"
-# input_b <- "chr3:1000-4000, chr2:1000-2000"
-#
-# input_b %>% stringr::str_split_1(', ') %>%
-#     as.data.frame() %>%
-#     separate('.', into = c("seqnames", "start", "end")) %>%
-#     makeGRangesListFromDataFrame()
-#
-# input_a %>% stringr::str_split_1(', ') %>%
-#     as.data.frame() %>%
-#     separate('.', into = c("seqnames", "start", "end")) %>%
-#     makeGRangesListFromDataFrame()
-#
-# # bed
-# x <- read.delim('./test.bed') %>%
-#     select(any_of(c('chr', 'seqnames', 'start', 'end')))
-# colnames(x) <- c('seqnames', 'start', 'end')
-#
-# x %>%
-#     makeGRangesListFromDataFrame()
-#
-#
-# bed_check <- function(bed){
-#     if (!file.exists(bed)){
-#         stop("The bed file '", bed, "' does not exist.", call. = FALSE)
-#     }
-#
-#     tryCatch({
-#         b.f <- read.delim(bed, header = FALSE)
-#         b.f <- b.f [,1:3]
-#         colnames(b.f) <- c('seqnames', 'start', 'end')
-#         b.f <- b.f %>%
-#             makeGRangesListFromDataFrame()
-#         return(bf)},
-#         stop('bed not formatted as expected.')
-#     )
-# }

@@ -2,9 +2,12 @@
 % Please edit documentation in R/AllGenerics.R
 \name{setDifferential}
 \alias{setDifferential}
+\alias{setDifferential,fourSynergy-method}
 \title{Set differential attribute}
 \usage{
 setDifferential(object, value)
+
+\S4method{setDifferential}{fourSynergy}(object, value)
 }
 \arguments{
 \item{object}{fourSynergy object with interactions from all base tools.}
@@ -17,3 +20,4 @@ Modified fourSynergy-object
 \description{
 Set differential attribute
 }
+\keyword{internal}

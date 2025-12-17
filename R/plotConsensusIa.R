@@ -117,7 +117,7 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
     # Genes
     if (!is.null(genes_of_interest)) {
         plot_genes(ia, kp, genes_of_interest, TxDb,
-                   gene.name.cex = gene.name.cex)
+                    gene.name.cex = gene.name.cex)
     }
 
     # VP

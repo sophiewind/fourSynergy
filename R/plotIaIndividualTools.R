@@ -30,9 +30,9 @@
 #' sia <- createIa(res_path = res_path, config = config, tracks = tracks)
 #' plotIaIndiviualTools(ia = sia)
 plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
-                                 cex.chr = 1, cex.ideo = 0.6, cex.y.track = 0.6,
-                                 cex.y.lab = 0.6, cex.vp = 1, cex.leg = 0.6,
-                                 highlight_regions = NULL, gene.name.cex = 1) {
+                                cex.chr = 1, cex.ideo = 0.6, cex.y.track = 0.6,
+                                cex.y.lab = 0.6, cex.vp = 1, cex.leg = 0.6,
+                                highlight_regions = NULL, gene.name.cex = 1) {
     # Create baseplot
     if (is.null(genes_of_interest)) {
         kp <- createKaryoplot(ia, cex = cex.chr)
@@ -48,7 +48,7 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
     # Tracks
     bgs <- readBedGraph(ia)
     plotTracks(ia, kp, bgs, r0 = 0.6, r1 = 1, cex.vp = cex.vp,
-               cex.y.track = cex.y.track)
+                cex.y.track = cex.y.track)
 
     # Interactions
     groups <- list(
@@ -73,7 +73,7 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
             r1 <- as.numeric((r1_slots[counter] * slot_height) + 0.0166667) *
                 0.99
             try(kpPlotRegions(kp, ia@expInteractions[[varname]],
-                              col = grp$col, r0 = r0 + (r1 - r0) / 2, r1 = r1))
+                            col = grp$col, r0 = r0 + (r1 - r0) / 2, r1 = r1))
             kpAddLabels(kp, labels = label, r0 = r0 + (r1 - r0) / 2, r1 = r1,
                         cex = cex.y.lab)
             counter <- counter + 1
@@ -91,8 +91,8 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
                 r0 <- as.numeric(r0_slots[counter] * slot_height) * 0.99
                 r1 <- as.numeric(r1_slots[counter] * slot_height) * 0.99
                 try(kpPlotRegions(kp, ia@ctrlInteractions[[varname]],
-                                  col = grp$col, r0 = r0 + (r1 - r0) / 2,
-                                  r1 = r1))
+                                    col = grp$col, r0 = r0 + (r1 - r0) / 2,
+                                    r1 = r1))
                 kpAddLabels(kp, labels = label, r0 = r0 + (r1 - r0) / 2,
                             r1 = r1,
                             cex = cex.y.lab)
@@ -109,12 +109,12 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
     # VP
     kpAbline(kp, v = start(ia@vp), col = "black", lty = 2, data.panel = 1)
     kpAddBaseNumbers(kp, tick.dist = 100000, tick.len = 10, cex = cex.ideo,
-                     minor.tick.col = "gray")
+                    minor.tick.col = "gray")
 
     # Legend
     has_control <-!is.null(ia@metadata$control)
     lg <- if (has_control) c("condition", "control") else "condition"
     col <- if (has_control) c("firebrick4", "darkblue") else "firebrick4"
     legend(0.85, 0.8, legend = lg, fill = col, border = NA, bty = "o",
-           cex = cex.leg)
+            cex = cex.leg)
 }

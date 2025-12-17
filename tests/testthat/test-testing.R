@@ -1,5 +1,4 @@
 # Setup data -------------------------------------------------------------------
-# TODO load testdata
 # ia hier einmal createn bzw. irgendeins im env haben
 library(yaml)
 library(DESeq2)

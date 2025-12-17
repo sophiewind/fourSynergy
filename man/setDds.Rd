@@ -20,3 +20,4 @@ Modified fourSynergy-object
 \description{
 Set dds attribute
 }
+\keyword{internal}
