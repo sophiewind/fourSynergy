@@ -14,7 +14,6 @@ createKaryoplot <- function(ia, type = 1, cex = 1, cex.axis = 1,
                             cex.lab = 1, cex.main = 1) {
     # Adjust plot settings
     pp <- getDefaultPlotParams(plot.type = type)
-
     pp$ideogramheight <- 5
     pp$data1inmargin <- 5
     pp$data2inmargin <- 5
@@ -196,8 +195,8 @@ plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2",
             gene_data <- makeGenesDataFromTxDb(TxDb, karyoplot = kp_zoom)
             gene_data <- addGeneNames(gene_data)
             gene_data <- mergeTranscripts(gene_data)
-            dev.off()
             plotg(gene_data)
+            dev.off()
         }
     }
 }
