@@ -3,7 +3,8 @@
 #'
 #' @param ia fourSynergy object with interactions from all base tools
 #' (peakC, r3c-seq, fourSig, r4cker) and other relevant information.
-#' @param genes_of_interest Vector with genes of interest.
+#' @param genes_of_interest Vector with genes of interest. Set to `all` if you
+#' want to plot all genes in this area.
 #' @param cex.chr character expansion of chromosome label.
 #' @param cex.ideo character expansion base numbers of ideogram.
 #' @param cex.y.track character expansion y axis track.
