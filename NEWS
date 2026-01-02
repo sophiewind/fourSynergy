@@ -1,3 +1,6 @@
+0.99.4
+- switching dev.off() in karyoplots
+
 0.99.3
 - minor formal changes
 - speed up examples
