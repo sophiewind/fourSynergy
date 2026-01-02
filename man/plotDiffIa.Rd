@@ -22,7 +22,8 @@ plotDiffIa(
 \item{ia}{fourSynergy object with interactions from all base tools
 (peakC, r3c-seq, fourSig, r4cker) and more relevant information.}
 
-\item{genes_of_interest}{Vector with genes of interest.}
+\item{genes_of_interest}{Vector with genes of interest. Set to \code{all} if you
+want to plot all genes in this area.}
 
 \item{cex.chr}{character expansion of chromosome label.}
 
