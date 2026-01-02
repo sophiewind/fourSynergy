@@ -165,46 +165,13 @@ plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2",
     if (length(genes_of_interest) == 1 && genes_of_interest == "all") {
         plotg(genes.data)
     } else {
-        # for (i in sg$name) {
-        #     gene <- sg[sg$name == i]
-        #     # zr <- GRanges(
-        #     #     seqnames = unique(as.character(seqnames(gene))),
-        #     #     ranges = IRanges(
-        #     #         start = max(1, start(gene) - 1000),
-        #     #         end = end(gene) + 1000
-        #     #     ),
-        #     #     strand = strand(gene)
-        #     # )
-        #     zr <- GRanges(
-        #         seqnames = unique(as.character(seqnames(gene))),
-        #         ranges = IRanges(
-        #             start = max(1, start(gene)) +
-        #                 ((end(gene) - max(1, start(gene)))/2),
-        #             end = max(1, start(gene)) +
-        #                 ((end(gene) - max(1, start(gene)))/2) + 1
-        #         ),
-        #         strand = strand(gene)
-        #     )
-        #     pdf(NULL)
-        #     kp_zoom <- plotKaryotype(
-        #         genome = ia@metadata$organism,
-        #         chromosomes = as.character(seqnames(gene)),
-        #         zoom = zr,
-        #         plot.type = 1
-        #     )
-        #     gene_data <- makeGenesDataFromTxDb(TxDb, karyoplot = kp_zoom)
-        #     gene_data <- addGeneNames(gene_data)
-        #     gene_data <- mergeTranscripts(gene_data)
-        #     dev.off()
-
-            gene_data <- genes.data
-            gene_data$genes <- genes.data$genes[genes.data$genes$name %in% genes_of_interest]
-            gene_data$transcripts <- gene_data$transcripts[names(gene_data$transcripts) %in% gene_data$genes$gene_id]
-            gene_data$coding.exons <- gene_data$coding.exons[names(gene_data$coding.exons) %in% paste0(gene_data$genes$gene_id, '.merged')]
-            gene_data$non.coding.exons <- gene_data$non.coding.exons[names(gene_data$non.coding.exons) %in% paste0(gene_data$genes$gene_id, '.merged')]
-            plotg(gene_data)
-
-        }
+        gene_data <- genes.data
+        gene_data$genes <- genes.data$genes[genes.data$genes$name %in% genes_of_interest]
+        gene_data$transcripts <- gene_data$transcripts[names(gene_data$transcripts) %in% gene_data$genes$gene_id]
+        gene_data$coding.exons <- gene_data$coding.exons[names(gene_data$coding.exons) %in% paste0(gene_data$genes$gene_id, '.merged')]
+        gene_data$non.coding.exons <- gene_data$non.coding.exons[names(gene_data$non.coding.exons) %in% paste0(gene_data$genes$gene_id, '.merged')]
+        plotg(gene_data)
+    }
 }
 
 #' Internal function to highlight regions in karyoplot.
