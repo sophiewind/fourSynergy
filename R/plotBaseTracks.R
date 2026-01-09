@@ -63,9 +63,10 @@ plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
                 value = as.factor(value)) %>% ggplot()
 
         if (!is.null(res$reg)) {
-            p <- p + geom_rect(as.data.frame(res$reg),
-                            aes(xmin = start, ymin =  0, xmax = end,
-                                ymax = Inf), alpha = 0.5)
+            p <- p + geom_rect(data = as.data.frame(res$reg),
+                               mapping = aes(xmin =  start, ymin =  0,
+                                             xmax = end, ymax = Inf),
+                               alpha = 0.5)
         }
         p <- p + geom_segment(aes(x = start, xend = end, y = 0,
                                 yend = .data[[mean_col]]), color = 'grey40') +
