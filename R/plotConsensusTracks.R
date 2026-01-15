@@ -63,7 +63,7 @@ plotConsensusTracks <- function(ia, highlight_regions = NULL,
             facet_grid(. ~ peak) +
             scale_color_manual(values = setNames("purple", ens_col)) +
             guides(alpha = "none", color = 'none') +
-            labs(y = 'Counts?', x = 'Position') +
+            labs(y = 'Counts', x = 'Position') +
             theme(panel.background = element_blank(),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank()) +
