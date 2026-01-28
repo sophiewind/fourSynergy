@@ -2,7 +2,6 @@
 title: "fourSynergy"
 output:
   BiocStyle::html_document:
-    
     toc: true
     toc_depth: 2
 vignette: >
@@ -12,6 +11,7 @@ vignette: >
 editor_options: 
   markdown: 
     wrap: 72
+bibliography: references.bib
 ---
 
 ```{r setup, include = FALSE}
@@ -37,12 +37,14 @@ analysis:
 -   peakC (<https://doi.org/10.1093/nar/gky443>)
 -   R.4Cker (<https://doi.org/10.1371/journal.pcbi.1004780>)
 
-*fourSynergy* is an ensemble algorithm that leverages synergies between
-the base tools *r3cseq*, *fourSig*, *peakC*, and *R.4cker*. To this end,
-all of these tools need to be run, which can be achieved using the
-*fourSynergy* pipeline. This pipeline, written in *snakemake*, includes
-quality control, interaction calling, and post-processing steps to
-prepare the output of the base tools for the ensemble algorithm.
+A benchmarking of those tools revealed that none of the tools performed
+adequately in all evaluated tasks [@Walter2019]. To address this we
+developed fourSynergy, a ensemble algorithm that leverages synergies
+between the base tools *r3cseq*, *fourSig*, *peakC*, and *R.4cker*. To
+this end, all of these tools need to be run, which can be achieved using
+the *fourSynergy* pipeline. This pipeline, written in *snakemake*,
+includes quality control, interaction calling, and post-processing steps
+to prepare the output of the base tools for the ensemble algorithm.
 
 # Requirements
 
@@ -82,8 +84,9 @@ package on testdata.**
 ## fourSynergy Pipeline
 
 Before starting the R analysis you have to run the fourSynergy snakemake
-pipeline, which is available at (will be added soon) and can be executed
-using:
+pipeline, which is available at
+(<https://github.com/sophiewind/fourSynergy>\_pipeline) and can be
+executed using:
 
 ```{bash snakemake, eval=FALSE}
 snakemake \
@@ -200,8 +203,9 @@ object to pass genes of interest, which are than shown in the karyoplot.
 ```{r plot_ia, message=FALSE, eval=TRUE}
 plotIaIndiviualTools(sia, genes_of_interest = c("Ldlrad4", "Cep76"))
 ```
-Further, the base tool results can be visualized in higher resolution using
-`plotBaseTracks()`.
+
+Further, the base tool results can be visualized in higher resolution
+using `plotBaseTracks()`.
 
 ```{r plot_tracks_base, message=FALSE, eval=TRUE}
 plotBaseTracks(sia)
@@ -251,7 +255,6 @@ The results of the differential analysis are stored in the
 ```{r diffplot, message=FALSE}
 plotDiffIa(ia = sia, genes_of_interest = c("Ldlrad4", "Cep76"))
 ```
-
 
 ```{r session}
 sessionInfo()
