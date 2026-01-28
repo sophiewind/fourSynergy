@@ -1,7 +1,8 @@
-importFrom("grDevices", "adjustcolor", "dev.new", "dev.off", "png", "pdf")
-importFrom("methods", "new")
-importFrom("stats", "heatmap", "na.omit", "setNames")
-importFrom("utils", "read.delim", "read.csv")
+# Selective imports
+importFrom(grDevices, adjustcolor, dev.new, dev.off, png, pdf)
+importFrom(methods, new)
+importFrom(stats, heatmap, na.omit, setNames)
+importFrom(utils, read.delim, read.csv)
 importFrom(graphics, legend)
 importFrom(yaml, read_yaml)
 importFrom(GenomeInfoDb, Seqinfo)
@@ -19,15 +20,18 @@ importFrom(tibble, column_to_rownames, rownames_to_column)
 importFrom(DESeq2, DESeqDataSetFromMatrix, estimateDispersions,
         estimateSizeFactors, resultsNames, nbinomWaldTest, results, counts,
         plotMA, plotCounts)
-importFrom(reshape2, melt)
-import(txdbmaker)
-import(TxDb.Mmusculus.UCSC.mm10.knownGene)
-import(TxDb.Hsapiens.UCSC.hg19.knownGene)
 importFrom(org.Hs.eg.db, org.Hs.eg.db)
 importFrom(org.Mm.eg.db, org.Mm.eg.db)
+importFrom(reshape2, melt)
+importFrom(bamsignals, bamCount)
+importFrom(TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Mmusculus.UCSC.mm10.knownGene)
+importFrom(TxDb.Hsapiens.UCSC.hg19.knownGene, TxDb.Hsapiens.UCSC.hg19.knownGene)
+
+# Imports
 import(ggplot2)
 import(karyoploteR)
-importFrom(bamsignals, bamCount)
+
+# Exports
 export(consensusIa)
 export(createIa)
 export(plotIaIndiviualTools)

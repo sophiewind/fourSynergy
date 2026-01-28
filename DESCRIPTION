@@ -23,7 +23,6 @@ Imports:
     org.Hs.eg.db,
     org.Mm.eg.db,
     reshape2,
-    txdbmaker,
     tidyr,
     methods,
     jsonlite,
@@ -43,7 +42,7 @@ Suggests:
     rmarkdown,
     BiocStyle
 biocViews: Sequencing, Software, DifferentialPeakCalling
-BugReports: https://github.com/sophiewind/TODO/issues
-URL: https://github.com/sophiewind/TODO
+BugReports: https://github.com/sophiewind/fourSynergy/issues
+URL: https://github.com/sophiewind/fourSynergy
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
