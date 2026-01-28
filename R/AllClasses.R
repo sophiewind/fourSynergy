@@ -11,7 +11,7 @@
 #' @slot differential Results of differential interaction calling (res).
 #' @slot dds Results of differential interaction calling (dds).
 #'
-#' @rdname ia4C-class
+#' @rdname fourSynergy-class
 #' @export
 setClass(
     "fourSynergy",
