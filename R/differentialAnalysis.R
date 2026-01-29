@@ -1,3 +1,37 @@
+#' Set differential attribute
+#'
+#' @param object fourSynergy object with interactions from all base tools.
+#' @param value DESeqResults-object.
+#'
+#' @return Modified fourSynergy-object
+#' @noRd
+#' @keywords internal
+setDifferential <- function(object, value) {
+    if (inherits(value, "DESeqResults")) {
+        object@differential <- value
+    } else {
+        stop("Value muste be DESeqResults object.")
+    }
+    return(object)
+}
+
+#' Set dds attribute
+#'
+#' @param object fourSynergy object with interactions from all base tools.
+#' @param value DESeqDataSet-object.
+#'
+#' @return Modified fourSynergy-object
+#' @noRd
+#' @keywords internal
+setDds <- function(object, value) {
+    if (inherits(value, "DESeqDataSet")) {
+        object@dds <- value
+    } else {
+        stop("Value must be DESeqDataSet object.")
+    }
+    return(object)
+}
+
 #' differentialAnalysis
 #'
 #' This function performs differential analysis to identify differential
