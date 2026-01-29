@@ -166,10 +166,17 @@ plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2",
         plotg(genes.data)
     } else {
         gene_data <- genes.data
-        gene_data$genes <- genes.data$genes[genes.data$genes$name %in% genes_of_interest]
-        gene_data$transcripts <- gene_data$transcripts[names(gene_data$transcripts) %in% gene_data$genes$gene_id]
-        gene_data$coding.exons <- gene_data$coding.exons[names(gene_data$coding.exons) %in% paste0(gene_data$genes$gene_id, '.merged')]
-        gene_data$non.coding.exons <- gene_data$non.coding.exons[names(gene_data$non.coding.exons) %in% paste0(gene_data$genes$gene_id, '.merged')]
+        gene_data$genes <-
+            genes.data$genes[genes.data$genes$name %in% genes_of_interest]
+        gene_data$transcripts <-
+            gene_data$transcripts[names(gene_data$transcripts) %in%
+                                    gene_data$genes$gene_id]
+        gene_data$coding.exons <-
+            gene_data$coding.exons[names(gene_data$coding.exons) %in%
+                                paste0(gene_data$genes$gene_id, '.merged')]
+        gene_data$non.coding.exons <-
+            gene_data$non.coding.exons[names(gene_data$non.coding.exons) %in%
+                                    paste0(gene_data$genes$gene_id, '.merged')]
         plotg(gene_data)
     }
 }
@@ -214,7 +221,7 @@ plotRegions <- function(ia, kp, highlight_regions){
             x0 = start(reg[[i]]),
             x1 = end(reg[[i]]),
             y0 = 0, y1 = 1,
-            r0 = 0.5, r1 = 1, col = adjustcolor("grey", alpha.f = 0.4),
+            r0 = 0, r1 = 1, col = adjustcolor("grey", alpha.f = 0.4),
             border = NA)
     }
 }
