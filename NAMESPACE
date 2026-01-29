@@ -24,7 +24,8 @@ importFrom(org.Hs.eg.db, org.Hs.eg.db)
 importFrom(org.Mm.eg.db, org.Mm.eg.db)
 importFrom(reshape2, melt)
 importFrom(bamsignals, bamCount)
-importFrom(TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Mmusculus.UCSC.mm10.knownGene)
+importFrom(TxDb.Mmusculus.UCSC.mm10.knownGene,
+            TxDb.Mmusculus.UCSC.mm10.knownGene)
 importFrom(TxDb.Hsapiens.UCSC.hg19.knownGene, TxDb.Hsapiens.UCSC.hg19.knownGene)
 
 # Imports
@@ -41,5 +42,3 @@ export(plotConsensusIa)
 export(plotBaseTracks)
 export(plotConsensusTracks)
 export(checkConfig)
-exportMethods(setDifferential)
-exportMethods(setDds)

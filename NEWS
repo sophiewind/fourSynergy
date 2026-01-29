@@ -1,5 +1,8 @@
+0.99.7
+- Bioconductor review changes
+
 0.99.6
-- trackplot corrections PLESE dont push to Bioc
+- trackplot corrections
 
 0.99.5
 - plot_genes corrections
