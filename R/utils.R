@@ -1,3 +1,142 @@
+# Getter ----------------------------------------------------------------------
+#' fourSynergy accessors
+#'
+#' Standard getter methods for \code{\linkS4class{fourSynergy}} object slots.
+#'
+#' @param object A \code{\linkS4class{fourSynergy}} object
+#' @return Various slots of the object (see individual methods)
+#'
+#' @name fourSynergy-accessors
+#' @rdname fourSynergy-accessors
+#' @keywords internal
+#' @aliases getMetadata getExpInteractions getCtrlInteractions getExpConsensus
+#'          getCtrlConsensus getViewpoint getVirtualFragmentLibrary
+#'          getTracks getDifferential getDDS
+NULL
+
+#' @describeIn fourSynergy-accessors Get metadata
+#' @keywords internal
+getMetadata <- function(object) {
+    object@metadata
+}
+
+#' @describeIn fourSynergy-accessors Get experimental interactions
+#' @keywords internal
+getExpInteractions <- function(object) {
+    object@expInteractions
+}
+
+#' @describeIn fourSynergy-accessors Get control interactions
+#' @keywords internal
+getCtrlInteractions <- function(object) {
+    object@ctrlInteractions
+}
+
+#' @describeIn fourSynergy-accessors Get experimental consensus
+#' @keywords internal
+getExpConsensus <- function(object) {
+    object@expConsensus
+}
+
+#' @describeIn fourSynergy-accessors Get control consensus
+#' @keywords internal
+getCtrlConsensus <- function(object) {
+    object@ctrlConsensus
+}
+
+#' @describeIn fourSynergy-accessors Get viewpoint
+#' @keywords internal
+getViewpoint <- function(object) {
+    object@vp
+}
+
+#' @describeIn fourSynergy-accessors Get virtual fragment library
+#' @keywords internal
+getVirtualFragmentLibrary <- function(object) {
+    object@vfl
+}
+
+#' @describeIn fourSynergy-accessors Get tracks
+#' @keywords internal
+getTracks <- function(object) {
+    object@tracks
+}
+
+#' @describeIn fourSynergy-accessors Get differential expression
+#' @keywords internal
+getDifferential <- function(object) {
+    object@differential
+}
+
+#' @describeIn fourSynergy-accessors Get DESeq results
+#' @keywords internal
+getDDS <- function(object) {
+    object@dds
+}
+
+
+# Setter -----------------------------------------------------------------------
+#' fourSynergy setters
+#'
+#' Standard setter methods for \code{\linkS4class{fourSynergy}} object slots.
+#'
+#' @param object A \code{\linkS4class{fourSynergy}} object
+#' @param value Replacement value for the respective slot
+#' @return Updated \code{fourSynergy} object (invisibly)
+#'
+#' @name fourSynergy-setters
+#' @rdname fourSynergy-setters
+#' @keywords internal
+#' @aliases setExpConsensus setCtrlConsensus setDifferential setDDS
+NULL
+
+#' @describeIn fourSynergy-setters Set setDifferential slot
+#' @keywords internal
+setDifferential <- function(object, value) {
+    if (inherits(value, "DESeqResults")) {
+        object@differential <- value
+    } else {
+        stop("Value muste be DESeqResults object.")
+    }
+    return(object)
+}
+
+#' @describeIn fourSynergy-setters Set setDds slot
+#' @keywords internal
+setDds <- function(object, value) {
+    if (inherits(value, "DESeqDataSet")) {
+        object@dds <- value
+    } else {
+        stop("Value must be DESeqDataSet object.")
+    }
+    return(object)
+}
+
+#' @describeIn fourSynergy-setters Set setExpConsensus slot
+#' @keywords internal
+setExpConsensus <- function(object, value) {
+    if (inherits(value, "GRanges")) {
+        object@expConsensus <- value
+    } else {
+        stop("Value must be GRanges object.")
+    }
+    return(object)
+}
+
+#' @describeIn fourSynergy-setters Set setCtrlConsensus slot
+#' @keywords internal
+setctrlConsensus <- function(object, value) {
+    if (inherits(value, "GRanges")) {
+        object@ctrlConsensus <- value
+    } else {
+        stop("Value must be GRanges object.")
+    }
+    return(object)
+}
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+# Utilities -------------------------------------------------------------------
 #' readAndTag
 #'
 #' Internal function to read base tools solutions in FourSynergy format.
@@ -44,7 +183,7 @@ readAndTag <- function(file_path, tag, org) {
 #' @keywords internal
 plotpreTracks <- function(ia, highlight_regions = NULL) {
     bgs <- readBedGraph(ia)
-    tmp <- ia@vfl
+    tmp <- getVirtualFragmentLibrary(ia)
 
     # Collect reads
     collect <- list()
@@ -58,13 +197,13 @@ plotpreTracks <- function(ia, highlight_regions = NULL) {
 
     # Average reads
     cond.reads <- coll.df %>%
-        dplyr::select(., matches(ia@metadata$condition)) %>%
+        dplyr::select(., matches(getMetadata(ia)$condition)) %>%
         mutate(mean_cond = rowMeans(.)) %>%
         dplyr::select(mean_cond)
     tmp$cond_reads <- cond.reads
-    if(!is.null(ia@metadata$control)){
+    if(!is.null(getMetadata(ia)$control)){
         ctrl.reads <- coll.df %>%
-            dplyr::select(., matches(ia@metadata$control)) %>%
+            dplyr::select(., matches(getMetadata(ia)$control)) %>%
             mutate(mean_ctrl = rowMeans(.)) %>%
             dplyr::select(mean_ctrl)
         tmp$ctrl_reads <- ctrl.reads

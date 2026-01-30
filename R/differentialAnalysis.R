@@ -1,37 +1,3 @@
-#' Set differential attribute
-#'
-#' @param object fourSynergy object with interactions from all base tools.
-#' @param value DESeqResults-object.
-#'
-#' @return Modified fourSynergy-object
-#' @noRd
-#' @keywords internal
-setDifferential <- function(object, value) {
-    if (inherits(value, "DESeqResults")) {
-        object@differential <- value
-    } else {
-        stop("Value muste be DESeqResults object.")
-    }
-    return(object)
-}
-
-#' Set dds attribute
-#'
-#' @param object fourSynergy object with interactions from all base tools.
-#' @param value DESeqDataSet-object.
-#'
-#' @return Modified fourSynergy-object
-#' @noRd
-#' @keywords internal
-setDds <- function(object, value) {
-    if (inherits(value, "DESeqDataSet")) {
-        object@dds <- value
-    } else {
-        stop("Value must be DESeqDataSet object.")
-    }
-    return(object)
-}
-
 #' differentialAnalysis
 #'
 #' This function performs differential analysis to identify differential
@@ -62,12 +28,12 @@ setDds <- function(object, value) {
 #' @export
 differentialAnalysis <- function(ia, fitType = "local") {
     # No consensus present
-    if (length(ia@expConsensus) == 0) {
+    if (length(getExpConsensus(ia)) == 0) {
         stop(
             "fourSynergy found no interactions in condition. Did you run",
             " `consensusIa()`?"
         )
-    } else if (length(ia@ctrlConsensus) == 0) {
+    } else if (length(getCtrlConsensus(ia)) == 0) {
         stop(
             "fourSynergy found no interactions in control. Did you run",
             " `consensusIa()`?"
@@ -75,13 +41,14 @@ differentialAnalysis <- function(ia, fitType = "local") {
     }
 
     # No interactions in consensus
-    else if (length(ia@expConsensus[ia@expConsensus$significance > 0]) == 0) {
+    else if (length(getExpConsensus(ia)[
+        getExpConsensus(ia)$significance > 0]) == 0) {
         stop(
             "fourSynergy found no interactions in condition. A differential ",
             "analysis is not possible"
         )
-    } else if (length(ia@ctrlConsensus[ia@ctrlConsensus$significance > 0]) ==
-        0) {
+    } else if (length(getCtrlConsensus(ia)[
+        getCtrlConsensus(ia)$significance > 0]) == 0) {
         stop(
             "fourSynergy found no interactions in control. A differential ",
             "analysis is not possible"
@@ -90,16 +57,18 @@ differentialAnalysis <- function(ia, fitType = "local") {
         # Create colData -------------------------------------------------------
         coldata <- data.frame("condition" = rep(
             c("condition", "control"),
-            each = length(ia@metadata$conditionRep)
+            each = length(getMetadata(ia)$conditionRep)
         ))
-        rownames(coldata) <- c(
-            paste(ia@metadata$condition, ia@metadata$conditionRep, sep = "_"),
-            paste(ia@metadata$control, ia@metadata$controlRep, sep = "_")
-        )
+        rownames(coldata) <- c(paste(getMetadata(ia)$condition,
+                                    getMetadata(ia)$conditionRep, sep = "_"),
+            paste(getMetadata(ia)$control,
+                getMetadata(ia)$controlRep, sep = "_"))
 
         ## Create consensus peaks
-        cond <- ia@expConsensus[which(ia@expConsensus$significance > 0), ]
-        ctrl <- ia@ctrlConsensus[which(ia@ctrlConsensus$significance > 0), ]
+        cond <- getExpConsensus(ia)[
+            which(getExpConsensus(ia)$significance > 0), ]
+        ctrl <- getCtrlConsensus(ia)[
+            which(getCtrlConsensus(ia)$significance > 0), ]
         cons <- GenomicRanges::union(na.omit(cond), na.omit(ctrl))
 
         ## Create count matrices
@@ -107,13 +76,13 @@ differentialAnalysis <- function(ia, fitType = "local") {
             bams <- paste0(ia@tracks, rownames(coldata), "_sorted.bam")
         } else {
             bams <- list.files(
-                paste0("./results/", ia@metadata$author, "/alignment/"),
+                paste0("./results/", getMetadata(ia)$author, "/alignment/"),
                 "_sorted.bam$"
             )
         }
 
         counts_coll <- lapply(bams, function(exp) {
-            bamCount(exp, cons, shift = ia@metadata$readLength / 2)
+            bamCount(exp, cons, shift = getMetadata(ia)$readLength / 2)
         })
 
         # Transform list to df
@@ -147,10 +116,6 @@ differentialAnalysis <- function(ia, fitType = "local") {
         res <- results(dds, contrast = c("condition", "condition", "control"))
         norm_counts <- counts(dds, normalized = TRUE)
         norm_counts_log <- log(norm_counts + 1, 10)
-
-        # plotMA(res, ylim = c(-2, 2))
-        # plotCounts(dds, gene = which.min(res$padj), intgroup = "condition")
-
         ia <- setDifferential(ia, res)
         ia <- setDds(ia, dds)
 

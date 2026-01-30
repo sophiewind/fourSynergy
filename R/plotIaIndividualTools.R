@@ -73,7 +73,7 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
             r0 <- as.numeric((r0_slots[counter] * slot_height)  + 0.0166667)*.99
             r1 <- as.numeric((r1_slots[counter] * slot_height) + 0.0166667) *
                 0.99
-            try(kpPlotRegions(kp, ia@expInteractions[[varname]],
+            try(kpPlotRegions(kp, getExpInteractions(ia)[[varname]],
                             col = grp$col, r0 = r0 + (r1 - r0) / 2, r1 = r1))
             kpAddLabels(kp, labels = label, r0 = r0 + (r1 - r0) / 2, r1 = r1,
                         cex = cex.y.lab)
@@ -83,7 +83,7 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
 
 
     counter <- 1
-    if (!is.null(ia@metadata$control)){
+    if (!is.null(getMetadata(ia)$control)){
         for (grp in groups) {
             for (i in seq_along(grp$nums)) {
                 n <- grp$nums[i]
@@ -91,7 +91,7 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
                 label <- paste0(sub("^rep\\.", "", grp$prefix), n, ' ctrl')
                 r0 <- as.numeric(r0_slots[counter] * slot_height) * 0.99
                 r1 <- as.numeric(r1_slots[counter] * slot_height) * 0.99
-                try(kpPlotRegions(kp, ia@ctrlInteractions[[varname]],
+                try(kpPlotRegions(kp, getCtrlInteractions(ia)[[varname]],
                                     col = grp$col, r0 = r0 + (r1 - r0) / 2,
                                     r1 = r1))
                 kpAddLabels(kp, labels = label, r0 = r0 + (r1 - r0) / 2,
@@ -108,12 +108,13 @@ plotIaIndiviualTools <- function(ia, genes_of_interest = NULL,
     }
 
     # VP
-    kpAbline(kp, v = start(ia@vp), col = "black", lty = 2, data.panel = 1)
+    kpAbline(kp, v = start(getViewpoint(ia)), col = "black", lty = 2,
+            data.panel = 1)
     kpAddBaseNumbers(kp, tick.dist = 100000, tick.len = 10, cex = cex.ideo,
                     minor.tick.col = "gray")
 
     # Legend
-    has_control <-!is.null(ia@metadata$control)
+    has_control <-!is.null(getMetadata(ia)$control)
     lg <- if (has_control) c("condition", "control") else "condition"
     col <- if (has_control) c("firebrick4", "darkblue") else "firebrick4"
     legend(0.85, 0.8, legend = lg, fill = col, border = NA, bty = "o",

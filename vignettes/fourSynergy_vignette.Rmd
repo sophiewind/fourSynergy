@@ -200,14 +200,14 @@ slotNames(sia)
 They can be visualized using `plotIaIndiviualTools()`. There is also the
 object to pass genes of interest, which are than shown in the karyoplot.
 
-```{r plot_ia, message=FALSE, eval=TRUE}
+```{r plot_ia, message=FALSE, eval=TRUE, warning=FALSE}
 plotIaIndiviualTools(sia, genes_of_interest = c("Ldlrad4", "Cep76"))
 ```
 
 Further, the base tool results can be visualized in higher resolution
 using `plotBaseTracks()`.
 
-```{r plot_tracks_base, message=FALSE, eval=TRUE}
+```{r plot_tracks_base, message=FALSE, eval=TRUE, warning=FALSE}
 plotBaseTracks(sia)
 ```
 
@@ -222,14 +222,14 @@ sia <- consensusIa(sia, model = "AUPRC")
 
 The ensemble results can than be visualized.
 
-```{r plot_ens}
+```{r plot_ens, warning=FALSE}
 plotConsensusIa(ia = sia)
 ```
 
 The consensus results can be visualized in higher resolution using
 `plotConsensusTracks()`.
 
-```{r plot_ens_tracks, message=FALSE, eval=TRUE}
+```{r plot_ens_tracks, message=FALSE, eval=TRUE, warning=FALSE}
 plotConsensusTracks(sia)
 ```
 

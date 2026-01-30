@@ -39,12 +39,12 @@ plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
                     plot_spider = FALSE, highlight_regions = NULL,
                     gene.name.cex = 1) {
     # Check input
-    if (is.null(ia@differential)) {
+    if (is.null(getDifferential(ia))) {
         stop("Empty @differential slot. Did you run `differentialAnalysis()`?")
     }
 
     # Remove NAs and transform to GRanges
-    res <- ia@differential
+    res <- getDifferential(ia)
     res.gr <- res %>%
         as.data.frame() %>%
         na.omit() %>%
@@ -55,7 +55,8 @@ plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
         ) %>%
         makeGRangesFromDataFrame(keep.extra.columns = TRUE)
 
-    if (nrow(ia@differential) == 0 || length(res.gr[res.gr$padj < 0.05]) == 0) {
+    if (nrow(getDifferential(ia)) == 0 || length(res.gr[res.gr$padj < 0.05])
+        == 0) {
         warning("No significant differential interaction were found.")
     }
 
@@ -81,39 +82,43 @@ plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
 
     if (plot_spider == TRUE){
         r_height <- c(0.35, 0.275, 0.235, 0.16, 0.15, 0.075)
-        kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[3])
+        kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr),
+                h = r_height[3])
 
         start.reg <- GRanges(
-            seqnames = seqnames(ia@vp),
-            ranges = start(ia@vp)
+            seqnames = seqnames(getViewpoint(ia)),
+            ranges = start(getViewpoint(ia))
         )
         start.regs <-
             rep(start.reg,
-                length(ia@expConsensus[ia@expConsensus$significance > 0]))
+                length(getExpConsensus(ia)[
+                    getExpConsensus(ia)$significance > 0]))
         kpPlotLinks(kp, start.regs,
-                    ia@expConsensus[ia@expConsensus$significance > 0],
+                    getExpConsensus(ia)[getExpConsensus(ia)$significance > 0],
                     col = "firebrick4",r0 = 0.35, r1 = 0.39)
         start.regs_ctrl <-
             rep(start.reg,
-                length(ia@ctrlConsensus[ia@ctrlConsensus$significance > 0]))
+                length(getCtrlConsensus(ia)[
+                    getCtrlConsensus(ia)$significance > 0]))
         kpPlotLinks(kp, start.regs_ctrl,
-                    ia@ctrlConsensus[ia@ctrlConsensus$significance > 0],
+                    getCtrlConsensus(ia)[getCtrlConsensus(ia)$significance > 0],
                     col = "darkblue",r0 = 0.235, r1 = 0.275)
     } else {
         r_height <- c(0.39, 0.293, 0.293, 0.196, 0.194, 0.097)
     }
     # Structure plot
-    kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[1])
-    kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[2])
-    kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[4])
-    kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[6])
+    kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr), h = r_height[1])
+    kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr), h = r_height[2])
+    kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr), h = r_height[4])
+    kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr), h = r_height[6])
 
-    kpPlotRegions(kp, ia@expConsensus[ia@expConsensus$significance > 0],
+    kpPlotRegions(kp, getExpConsensus(ia)[getExpConsensus(ia)$significance > 0],
                 col = "firebrick4", r0 = r_height[2], r1 = r_height[1])
     kpAddLabels(kp,
                 labels = "condition", r0 = r_height[2], r1 = r_height[1],
                 cex = cex.y.lab, data.panel = 1)
-    kpPlotRegions(kp, ia@ctrlConsensus[ia@ctrlConsensus$significance > 0],
+    kpPlotRegions(kp, getCtrlConsensus(ia)[
+        getCtrlConsensus(ia)$significance > 0],
                 col = "darkblue", r0 = r_height[4], r1 = r_height[3])
 
     kpAddLabels(kp,
@@ -125,7 +130,7 @@ plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
 
     # Plot L2FC
     kpBars(kp,
-        chr = paste0("chr", ia@metadata$VPchr), x0 = start(res.gr),
+        chr = paste0("chr", getMetadata(ia)$VPchr), x0 = start(res.gr),
         x1 = end(res.gr), y0 = 0.5, y1 = 0.5 + scaled_y1,
         r0 = 0, r1 = r_height[5], col = "yellow")
 
@@ -134,7 +139,7 @@ plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
                 cex = cex.y.lab, data.panel = 1)
 
     # Plot base L2FC
-    kpAbline(kp, v = start(ia@vp), col = "black", lty = 2, lwd = 1)
+    kpAbline(kp, v = start(getViewpoint(ia)), col = "black", lty = 2, lwd = 1)
 
     # Ideogram labels
     kpAddBaseNumbers(kp, tick.dist = 100000, tick.len = 10, cex = cex.ideo,
@@ -146,7 +151,7 @@ plotDiffIa <- function(ia, genes_of_interest = NULL, cex.chr = 1,
     }
 
     # Legend
-    has_control <-!is.null(ia@metadata$control)
+    has_control <-!is.null(getMetadata(ia)$control)
     lg <- if (has_control) c("condition", "control") else "condition"
     col <- if (has_control) c("firebrick4", "darkblue") else "firebrick4"
     legend(0.85, 0.8, legend = lg, fill = col, border = NA, bty = "o",

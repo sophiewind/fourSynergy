@@ -25,13 +25,14 @@ createKaryoplot <- function(ia, type = 1, cex = 1, cex.axis = 1,
 
     # Display the plot
     plotKaryotype(
-        genome = ia@metadata$organism,
-        chromosomes = seqnames(ia@vp),
+        genome = getMetadata(ia)$organism,
+        chromosomes = seqnames(getViewpoint(ia)),
         plot.type = type,
         zoom = makeGRangesFromDataFrame(data.frame(
-            seqnames = seqnames(ia@vp),
-            start = start(ia@vfl[1]),
-            end = end(ia@vfl[length(ia@vfl)])
+            seqnames = seqnames(getViewpoint(ia)),
+            start = start(getVirtualFragmentLibrary(ia)[1]),
+            end = end(getVirtualFragmentLibrary(ia)[
+                length(getVirtualFragmentLibrary(ia))])
         )), plot.params = pp,
         cex = cex, cex.axis = cex.axis, cex.lab = cex.lab, cex.main = cex.main
     )
@@ -46,11 +47,11 @@ createKaryoplot <- function(ia, type = 1, cex = 1, cex.axis = 1,
 #' @keywords internal
 readBedGraph <- function(ia) {
     bgs <- GRangesList()
-    if (!is.null(ia@tracks)) {
-        for (i in ia@metadata$conditionRep) {
+    if (!is.null(getTracks(ia))) {
+        for (i in getMetadata(ia)$conditionRep) {
             try(cond <- read.delim(
                 paste0(
-                    ia@tracks, ia@metadata$condition, "_", i,
+                    getTracks(ia), getMetadata(ia)$condition, "_", i,
                     "_sorted.bedGraph"
                 ),
                 header = FALSE
@@ -58,13 +59,13 @@ readBedGraph <- function(ia) {
                 `colnames<-`(c("seqnames", "start", "end", "reads")))
             try(cond <- cond[startsWith(cond$seqnames, "chr"), ] %>%
                 makeGRangesFromDataFrame(keep.extra.columns = TRUE))
-            try(bgs[[paste0(ia@metadata$condition, "_", i)]] <- cond)
+            try(bgs[[paste0(getMetadata(ia)$condition, "_", i)]] <- cond)
         }
 
-        for (i in ia@metadata$controlRep) {
+        for (i in getMetadata(ia)$controlRep) {
             ctrl <- read.delim(
                 paste0(
-                    ia@tracks, ia@metadata$control, "_", i,
+                    getTracks(ia), getMetadata(ia)$control, "_", i,
                     "_sorted.bedGraph"
                 ),
                 header = FALSE
@@ -72,7 +73,7 @@ readBedGraph <- function(ia) {
                 `colnames<-`(c("seqnames", "start", "end", "reads"))
             ctrl <- ctrl[startsWith(ctrl$seqnames, "chr"), ] %>%
                 makeGRangesFromDataFrame(keep.extra.columns = TRUE)
-            bgs[[paste0(ia@metadata$control, "_", i)]] <- ctrl
+            bgs[[paste0(getMetadata(ia)$control, "_", i)]] <- ctrl
         }
     }
     return(bgs)
@@ -93,7 +94,7 @@ readBedGraph <- function(ia) {
 plotTracks <- function(ia, kp, bgs, r0 = 0, r1 = 1, cex.vp = 1,
                         cex.y.track = 0.6) {
     for (bg in names(bgs)) {
-        if (grepl(ia@metadata$condition, bg)) {
+        if (grepl(getMetadata(ia)$condition, bg)) {
             kpPlotDensity(kp,
                         data.panel = 1, bgs[[bg]],
                         col = adjustcolor("firebrick4", alpha.f = 1 /
@@ -108,7 +109,7 @@ plotTracks <- function(ia, kp, bgs, r0 = 0, r1 = 1, cex.vp = 1,
         }
     }
     kpText(kp,
-        chr = paste0("chr", ia@metadata$VPchr), x = start(ia@vp),
+        chr = paste0("chr", getMetadata(ia)$VPchr), x = start(getViewpoint(ia)),
         y = (r1 - 0.05), labels = "VP", data.panel = 1, cex = cex.vp,
         srt = 0, pos = 2, offset = 0.2)
 
@@ -137,7 +138,7 @@ plotTracks <- function(ia, kp, bgs, r0 = 0, r1 = 1, cex.vp = 1,
 #' @noRd
 plot_genes <- function(ia, kp, genes_of_interest, TxDb, panel = "2",
                         gene.name.cex = 1) {
-    TxDb <- switch(ia@metadata$organism,
+    TxDb <- switch(getMetadata(ia)$organism,
                 "mm10" = TxDb.Mmusculus.UCSC.mm10.knownGene,
                 "hg19" = TxDb.Hsapiens.UCSC.hg19.knownGene)
 
@@ -217,7 +218,7 @@ plotRegions <- function(ia, kp, highlight_regions){
 
     for (i in seq(1, length(reg))){
         kpBars(kp,
-            chr = paste0("chr", ia@metadata$VPchr),
+            chr = paste0("chr", getMetadata(ia)$VPchr),
             x0 = start(reg[[i]]),
             x1 = end(reg[[i]]),
             y0 = 0, y1 = 1,

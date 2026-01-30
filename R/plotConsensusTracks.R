@@ -25,7 +25,7 @@ plotConsensusTracks <- function(ia, highlight_regions = NULL,
     if(is.null(ia) || !(is(ia, "fourSynergy"))){
         stop("Object is not a fourSynergy object or not provided.")
     }
-    if (length(ia@expConsensus) == 0) {
+    if (length(getExpConsensus(ia)) == 0) {
         stop("fourSynergy found no interactions in condition. Did you run",
             " `consensusIa()`?"
         )
@@ -35,8 +35,8 @@ plotConsensusTracks <- function(ia, highlight_regions = NULL,
         stop("res does not containt tmp. Check plotpreTracks")
     }
     tmp <- res$tmp
-    tmp$ens_cond <- ia@expConsensus$significance
-    try(tmp$ens_ctrl <- ia@ctrlConsensus$significance)
+    tmp$ens_cond <- getExpConsensus(ia)$significance
+    try(tmp$ens_ctrl <- getCtrlConsensus(ia)$significance)
     tmp.df <- as.data.frame(tmp)
 
     create_plot_ens <- function(df, mean_col, ens_col){
@@ -67,11 +67,12 @@ plotConsensusTracks <- function(ia, highlight_regions = NULL,
             theme(panel.background = element_blank(),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank()) +
-            geom_vline(aes(xintercept = start(ia@vp)), linetype = 'dashed')
+            geom_vline(aes(xintercept = start(getViewpoint(ia))),
+                    linetype = 'dashed')
     }
     p.cond <- create_plot_ens(tmp.df, "mean_cond", "ens_cond")
 
-    if (!is.null(ia@metadata$control)){
+    if (!is.null(getMetadata(ia)$control)){
         p.ctrl <- create_plot_ens(tmp.df, "mean_ctrl", "ens_ctrl")
     } else {
         p.ctrl <- NULL

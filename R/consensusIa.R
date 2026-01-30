@@ -32,9 +32,9 @@ consensusIa <- function(ia, model = "F1") {
             significance = 0
         ),
         keep.extra.columns = TRUE,
-        seqinfo = GenomeInfoDb::Seqinfo(genome = ia@metadata$organism)
+        seqinfo = GenomeInfoDb::Seqinfo(genome = getMetadata(ia)$organism)
     )
-    vfl <- ia@vfl
+    vfl <- getVirtualFragmentLibrary(ia)
     greater.than <- 0.5
 
     # Assign weights to vfl
@@ -46,11 +46,11 @@ consensusIa <- function(ia, model = "F1") {
             package = "fourSynergy"
         )) %>%
             column_to_rownames("X")
-        ia_tmp <- ia@expInteractions
+        ia_tmp <- getExpInteractions(ia)
 
         # Add weights and rating to intervals each tool is in one list element
         for (i in seq(1, nrow(weights))) {
-            gr <- ia@expInteractions[startsWith(
+            gr <- getExpInteractions(ia)[startsWith(
                 prefix = rownames(weights)[i],
                 x = names(ia_tmp)
             )][[1]]
@@ -67,12 +67,12 @@ consensusIa <- function(ia, model = "F1") {
             x
         }))
 
-        if (length(ia@ctrlInteractions) > 0) {
-            ia_tmp_ctrl <- ia@ctrlInteractions
+        if (length(getCtrlInteractions(ia)) > 0) {
+            ia_tmp_ctrl <- getCtrlInteractions(ia)
 
             # Add weights and rating to intervals
             for (i in seq(1, nrow(weights))) {
-                gr <- ia@ctrlInteractions[
+                gr <- getCtrlInteractions(ia)[
                     startsWith(
                         prefix = rownames(weights)[i],
                         x = names(ia_tmp_ctrl)
@@ -107,7 +107,7 @@ consensusIa <- function(ia, model = "F1") {
         }
 
         # Add rates to vfl if control is available
-        if (length(ia@ctrlInteractions) > 0) {
+        if (length(getCtrlInteractions(ia)) > 0) {
             for (i in seq_along(ia_tmp_ctrl)) {
                 ov <- findOverlaps(vfl, ia_tmp_ctrl[[i]])
                 name <- paste0("rate_", names(ia_tmp_ctrl[i]))
@@ -146,7 +146,7 @@ consensusIa <- function(ia, model = "F1") {
 
         # Set maj. significance to 0 bc its old value
         maj.cond$significance <- 0
-        if (!is.null(ia@ctrlInteractions)) {
+        if (!is.null(getCtrlInteractions(ia))) {
             maj.ctrl$significance <- 0
         }
 
@@ -163,7 +163,7 @@ consensusIa <- function(ia, model = "F1") {
         }
 
         # control
-        if (length(ia@ctrlInteractions) > 0) {
+        if (length(getCtrlInteractions(ia)) > 0) {
             if (length(maj.ctrl) > 0 &&
                 sum(maj.ctrl$rate_total_control > greater.than) > 0) {
                 mcols(maj.ctrl[maj.ctrl$rate_total_control >
@@ -177,12 +177,12 @@ consensusIa <- function(ia, model = "F1") {
         }
         maj.cond$tool <- "weighted_voting"
 
-        if (!is.null(ia@ctrlInteractions)) {
+        if (!is.null(getCtrlInteractions(ia))) {
             maj.ctrl$tool <- "weighted_voting"
         }
         ia@expConsensus <- maj.cond
 
-        if (!is.null(ia@ctrlInteractions)) {
+        if (!is.null(getCtrlInteractions(ia))) {
             ia@ctrlConsensus <- maj.ctrl
         }
         return(ia)

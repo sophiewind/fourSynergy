@@ -30,7 +30,7 @@ plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
     p.col <- c("rep.r3c_2000" = "#fdae61", "rep.r4cker_nearbait" = "#228B22",
             "rep.peakc_21" = "#9c0142", "rep.foursig_1" = "#3288bd")
 
-    if (!is.null(ia@metadata$control)){
+    if (!is.null(getMetadata(ia)$control)){
         tools <- paste0('rep.', rep(c('peakc_21', 'foursig_1', 'r3c_2000',
                         'r4cker_nearbait'), each = 2),
                 c('.condition', '.control'))
@@ -40,9 +40,9 @@ plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
     }
     for (p in tools) {
         if (endsWith(p, 'condition')) {
-            inter <- ia@expInteractions[[p]]
+            inter <- getExpInteractions(ia)[[p]]
         } else {
-            try(inter <- ia@ctrlInteractions[[p]])
+            try(inter <- getCtrlInteractions(ia)[[p]])
         }
 
         ov <- findOverlaps(res$tmp, inter)
@@ -82,11 +82,12 @@ plotBaseTracks <- function(ia, highlight_regions = NULL, max_range = 3000) {
             theme(panel.background = element_blank(),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank()) +
-            geom_vline(aes(xintercept = start(ia@vp)), linetype = 'dashed')
+            geom_vline(aes(xintercept = start(getViewpoint(ia))),
+                    linetype = 'dashed')
         return(p)
     }
     p.cond <- create_plot(tmp.df, "condition", "mean_cond")
-    if(!is.null(ia@metadata$control)){
+    if(!is.null(getMetadata(ia)$control)){
         p.ctrl <- create_plot(tmp.df, "control", "mean_ctrl")
     } else {
         p.ctrl <- NULL

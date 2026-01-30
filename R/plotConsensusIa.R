@@ -38,7 +38,7 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
                             cex.y.track = 0.6, cex.vp = 1, cex.leg = 0.6,
                             highlight_regions = NULL, plot_spider = FALSE,
                             gene.name.cex = 1) {
-    TxDb <- switch(ia@metadata$organism,
+    TxDb <- switch(getMetadata(ia)$organism,
                 "mm10" = TxDb.Mmusculus.UCSC.mm10.knownGene,
                 "hg19" = TxDb.Hsapiens.UCSC.hg19.knownGene)
 
@@ -60,56 +60,60 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
 
     if (plot_spider == TRUE){
         r_height <- c(0.4, 0.225, 0.175)
-        kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[2])
-
-        start.reg <- GRanges(seqnames = seqnames(ia@vp),
-            ranges = start(ia@vp))
+        kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr),
+                h = r_height[2])
+        start.reg <- GRanges(seqnames = seqnames(getViewpoint(ia)),
+            ranges = start(getViewpoint(ia)))
         start.regs <- rep(start.reg,
-                        length(ia@expConsensus[
-                            ia@expConsensus$significance > 0]))
+                        length(getExpConsensus(ia)[
+                            getExpConsensus(ia)$significance > 0]))
         kpPlotLinks(kp, start.regs,
-                ia@expConsensus[ia@expConsensus$significance > 0],
+                getExpConsensus(ia)[getExpConsensus(ia)$significance > 0],
                 col = "firebrick4",r0 = r_height[1], r1 = 0.45)
         start.regs_ctrl <-
             rep(start.reg,
-                length(ia@ctrlConsensus[ia@ctrlConsensus$significance > 0]))
+                length(getCtrlConsensus(ia)[
+                    getCtrlConsensus(ia)$significance > 0]))
         kpPlotLinks(kp, start.regs_ctrl,
-                    ia@ctrlConsensus[ia@ctrlConsensus$significance > 0],
+                    getCtrlConsensus(ia)[getCtrlConsensus(ia)$significance > 0],
                     col = "darkblue",r0 = r_height[3], r1 = r_height[2])
     } else {
         r_height <- c(0.45, 0.225, 0.225)
     }
 
     # Structure plot
-    kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[1])
-    kpAbline(kp, chr = paste0("chr", ia@metadata$VPchr), h = r_height[3])
+    kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr), h = r_height[1])
+    kpAbline(kp, chr = paste0("chr", getMetadata(ia)$VPchr), h = r_height[3])
 
     # Interactions
-    if (length(ia@expConsensus) == 0) {
+    if (length(getExpConsensus(ia)) == 0) {
         warning(
             "fourSynergy found no interactions in condition. Did you run",
             " `consensusIa()`?"
         )
-    } else if (length(ia@expConsensus[ia@expConsensus$significance > 0]) == 0) {
+    } else if (length(getExpConsensus(ia)[
+        getExpConsensus(ia)$significance > 0]) == 0) {
         warning("fourSynergy found no interactions in condition.")
     } else {
-        kpPlotRegions(kp, ia@expConsensus[ia@expConsensus$significance > 0],
+        kpPlotRegions(kp, getExpConsensus(ia)[
+            getExpConsensus(ia)$significance > 0],
                     col = "firebrick4", r0 = r_height[2], r1 = r_height[1])
         kpAddLabels(kp,
                     labels = "condition", r0 = r_height[2], r1 = r_height[1],
                     cex = cex.y.lab, data.panel = 1)
     }
 
-    if (length(ia@ctrlConsensus) == 0) {
+    if (length(getCtrlConsensus(ia)) == 0) {
         warning(
             "fourSynergy found no interactions in control. Did you run",
             "`consensusIa()`?"
         )
-    } else if (length(ia@ctrlConsensus[ia@ctrlConsensus$significance > 0]) ==
-            0){
+    } else if (length(getCtrlConsensus(ia)[
+        getCtrlConsensus(ia)$significance > 0]) == 0){
         warning("fourSynergy found no interactions in control.")
     } else {
-        kpPlotRegions(kp, ia@ctrlConsensus[ia@ctrlConsensus$significance > 0],
+        kpPlotRegions(kp, getCtrlConsensus(ia)[
+            getCtrlConsensus(ia)$significance > 0],
                     col = "darkblue", r0 = 0, r1 = r_height[3])
         kpAddLabels(kp, labels = "control", r0 = 0, r1 = r_height[3],
                     cex = cex.y.lab, data.panel = 1)
@@ -122,12 +126,13 @@ plotConsensusIa <- function(ia = GRangesList(), genes_of_interest = NULL,
     }
 
     # VP
-    kpAbline(kp, v = start(ia@vp), col = "black", lty = 2, data.panel = 1)
+    kpAbline(kp, v = start(getViewpoint(ia)), col = "black", lty = 2,
+            data.panel = 1)
     kpAddBaseNumbers(kp, tick.dist = 100000, tick.len = 10, cex = cex.ideo,
                     minor.tick.col = "gray")
 
     # Legend
-    has_control <-!is.null(ia@metadata$control)
+    has_control <-!is.null(getMetadata(ia)$control)
     lg <- if (has_control) c("condition", "control") else "condition"
     col <- if (has_control) c("firebrick4", "darkblue") else "firebrick4"
     legend(0.85, 0.8, legend = lg, fill = col, border = NA, bty = "o",
